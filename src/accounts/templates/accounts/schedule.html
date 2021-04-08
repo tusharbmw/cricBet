@@ -1,0 +1,43 @@
+{% extends 'accounts/main.html' %}
+
+{% block content %}
+<form action="/update/" method="POST">
+    {% csrf_token %}
+<h1> Upcoming Matches selection for user: {{uname}}</h1>
+<table class="table" border="2">
+    <tr>
+        <th scope="col"> Date Time (GMT) </th>
+        <th scope="col"> Description </th>
+        <th scope="col"> Match team1 </th>
+        <th scope="col"> No Bet? </th>
+        <th scope="col"> Match team2 </th>
+        <th scope="col"> Match venue </th>
+        <th scope="col"> Match Result </th>
+    <tr>
+
+    {% for m in matches_list %}
+    <tr>
+    <td>{{m.datetime}}</td>
+    <td>{{m.description}}</td>
+    <td><input type="radio" class="btn-check" name="options_{{m.id}}" value="team1" id="team_1_{{m.id}}" autocomplete="off" {{m.team1_checked}} {{disabled}}>
+<label class="btn btn-outline-success" for="team_1_{{m.id}}">{{m.team1}}</label></td>
+    <td><input type="radio" class="btn-check" name="options_{{m.id}}" value="None" id="team_none_{{m.id}}" autocomplete="off" {{m.none_checked}} {{disabled}}>
+<label class="btn btn-outline-secondary" for="team_none_{{m.id}}">No Bet</label></td>
+    <td><input type="radio" class="btn-check" name="options_{{m.id}}" value="team2" id="team_2_{{m.id}}" autocomplete="off" {{m.team2_checked}} {{disabled}}>
+<label class="btn btn-outline-success" for="team_2_{{m.id}}">{{m.team2}}</label></td>
+    <td>{{m.venue}}</td>
+    <td>{{m.result}}</td>
+    </tr>
+    {% endfor %}
+
+    <tr><td colspan="10" style="text-align:center;">
+        <div class="d-grid gap-2 col-6 mx-auto">
+            <input type="submit" onclick="alert('Your Bets are saved. Good Luck!!');" class="btn btn-outline-primary" value="Save" {{disabled}}> </div>
+    </td></tr>
+
+</table>
+
+</form>
+
+
+{% endblock %}

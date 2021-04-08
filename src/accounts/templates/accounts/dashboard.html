@@ -1,0 +1,30 @@
+{% extends 'accounts/main.html' %}
+
+{% block content %}
+<h1> This is the Dashboard , my selections</h1>
+<table class="table" border="2">
+    <tr>
+        <th scope="col"> User Name </th>
+        <th scope="col"> Match </th>
+        <th scope="col"> You Selected </th>
+        <th scope="col"> Match team1 </th>
+        <th scope="col"> Match team2 </th>
+        <th scope="col"> Match venue </th>
+        <th scope="col"> Match Result </th>
+    <tr>
+
+    {% for i in selections %}
+    <tr>
+    <td>{{i.user}}</td>
+    <td>{{i.match}}</td>
+    <td>{{i.selection.name}}</td>
+    <td>{{i.match.team1}}</td>
+    <td>{{i.match.team2}}</td>
+    <td>{{i.match.venue}}</td>
+    <td>{{i.match.result}}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endblock %}
