@@ -137,7 +137,7 @@ def leaderboard(request):
     context['lost'] = lost
     context['won'] = won
     return render(request, 'accounts/leaderboard.html', context)
-    #return HttpResponse("Leaderboard")
+
 
 @login_required(login_url='/login')
 def dashboard(request):
