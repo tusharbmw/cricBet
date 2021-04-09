@@ -107,7 +107,7 @@ def teams_view(request):
 @login_required(login_url='/login')
 def leaderboard(request):
     context = {}
-    result = []  # structure [{'usr1':{'won':8 , 'lost':5 , 'total': 3}]
+    #result = []  # structure [{'usr1':{'won':8 , 'lost':5 , 'total': 3}]
     # initialize win and loss
     won = {}
     lost = {}
@@ -128,6 +128,12 @@ def leaderboard(request):
                     won[u] += len(mr_sel2)
                 for u in mr_sel2:
                     lost[u] += len(mr_sel1)
+            else:   # team2 won
+                for u in mr_sel1:
+                    lost[u] += len(mr_sel2)
+                for u in mr_sel2:
+                    won[u] += len(mr_sel1)
+
                     # Tushar to be continued
     total = {}
 
