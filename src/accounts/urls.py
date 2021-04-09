@@ -13,4 +13,5 @@ urlpatterns = [
     path('schedule/<str:pk>', views.schedule_view),
     path('schedule/', views.schedule_view,name='schedule'),
     path('update/', views.update, name='update'),
+    path('leaderboard/', views.leaderboard, name='leaderboard'),
 ]

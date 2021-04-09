@@ -7,9 +7,13 @@ from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from datetime import timezone, datetime, timedelta
+from django.template.defaulttags import register
 
 
 # Create your views here.
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
 
 def home(request):
@@ -45,7 +49,6 @@ def update(request):
         for key, value in request.POST.items():
             if key.startswith("options_"):
                 match_id = key.split('_')[1]
-                print('Match ID: %s' % (match_id))
                 match = Match.objects.get(id=match_id)
                 match_date = match.datetime
                 td = match_date - now
@@ -100,6 +103,41 @@ def teams_view(request):
 
     return render(request, 'accounts/teams.html', {'teams': teams})
 
+
+@login_required(login_url='/login')
+def leaderboard(request):
+    context = {}
+    result = []  # structure [{'usr1':{'won':8 , 'lost':5 , 'total': 3}]
+    # initialize win and loss
+    won = {}
+    lost = {}
+    for u in User.objects.all():
+        won[u.username]=0
+        lost[u.username]=0
+    matches_with_result = Match.objects.filter(Q(result='team1') | Q(result='team2'))
+    for mr in matches_with_result:
+        mr_sel1 = []
+        mr_sel2 = []
+        for s in mr.selection_set.all():
+            if s.selection == mr.team1:
+                mr_sel1.append(s.user.username)
+            if s.selection == mr.team2:
+                mr_sel2.append(s.user.username)
+            if mr.result == "team1":
+                for u in mr_sel1:
+                    won[u] += len(mr_sel2)
+                for u in mr_sel2:
+                    lost[u] += len(mr_sel1)
+                    # Tushar to be continued
+    total = {}
+
+    for u in won.keys():
+        total[u] = won[u]-lost[u]
+    context['total'] = sorted(total.items(), key=lambda x: x[1], reverse=True)
+    context['lost'] = lost
+    context['won'] = won
+    return render(request, 'accounts/leaderboard.html', context)
+    #return HttpResponse("Leaderboard")
 
 @login_required(login_url='/login')
 def dashboard(request):

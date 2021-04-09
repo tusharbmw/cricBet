@@ -1,0 +1,26 @@
+{% extends 'accounts/main.html' %}
+
+{% block content %}
+
+<table class="table" border="2">
+    <tr><th colspan="10" style="text-align:center;" > Leaderboard</th></tr>
+    <tr>
+        <th scope="col"> User </th>
+        <th scope="col"> Won </th>
+        <th scope="col"> Lost </th>
+        <th scope="col"> Total Points </th>
+
+    <tr>
+    {% for u in total %}
+    <tr>
+    <td>{{u.0}}</td>
+    <td>{{won|get_item:u.0}}</td>
+    <td>{{lost|get_item:u.0}}</td>
+    <td>{{u.1}}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+{% endblock %}
