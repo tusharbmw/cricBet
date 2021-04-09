@@ -107,13 +107,12 @@ def teams_view(request):
 @login_required(login_url='/login')
 def leaderboard(request):
     context = {}
-    #result = []  # structure [{'usr1':{'won':8 , 'lost':5 , 'total': 3}]
     # initialize win and loss
     won = {}
     lost = {}
     for u in User.objects.all():
-        won[u.username]=0
-        lost[u.username]=0
+        won[u.username] = 0
+        lost[u.username] = 0
     matches_with_result = Match.objects.filter(Q(result='team1') | Q(result='team2'))
     for mr in matches_with_result:
         mr_sel1 = []
@@ -123,16 +122,16 @@ def leaderboard(request):
                 mr_sel1.append(s.user.username)
             if s.selection == mr.team2:
                 mr_sel2.append(s.user.username)
-            if mr.result == "team1":
-                for u in mr_sel1:
-                    won[u] += len(mr_sel2)
-                for u in mr_sel2:
-                    lost[u] += len(mr_sel1)
-            else:   # team2 won
-                for u in mr_sel1:
-                    lost[u] += len(mr_sel2)
-                for u in mr_sel2:
-                    won[u] += len(mr_sel1)
+        if mr.result == "team1":
+            for u in mr_sel1:
+                won[u] += len(mr_sel2)
+            for u in mr_sel2:
+                lost[u] += len(mr_sel1)
+        else:   # team2 won
+            for u in mr_sel1:
+                lost[u] += len(mr_sel2)
+            for u in mr_sel2:
+                won[u] += len(mr_sel1)
 
                     # Tushar to be continued
     total = {}
