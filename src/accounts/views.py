@@ -3,10 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse
 from teams.models import *
+from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from datetime import timezone, datetime, timedelta
-from .forms import CreateUserFroms
+
 
 # Create your views here.
 
@@ -24,15 +25,17 @@ def login_page(request):
             login(request, user)
             return redirect('schedule')
         else:
-            messages.info(request,'Username or Password incorrect')
+            messages.info(request, 'Username or Password incorrect')
     context = {}
     return render(request, 'accounts/login.html', context)
+
 
 @login_required(login_url='/login')
 def logout_page(request):
     logout(request)
     messages.info(request, 'User Successfully logged out')
     return redirect('login')
+
 
 @login_required(login_url='/login')
 def update(request):
@@ -44,37 +47,34 @@ def update(request):
                 match_id = key.split('_')[1]
                 print('Match ID: %s' % (match_id))
                 match = Match.objects.get(id=match_id)
-                match_date=match.datetime
+                match_date = match.datetime
                 td = match_date - now
                 if td.days < 0:
-                    #match has already started
+                    # match has already started
                     continue
 
                 if value in ('team1', 'team2'):
                     if value == 'team1':
                         team = match.team1
                     else:
-                        team= match.team2
+                        team = match.team2
                     try:
-                        obj=Selection.objects.get(user=user, match=match)
-                        obj.selection=team
+                        obj = Selection.objects.get(user=user, match=match)
+                        obj.selection = team
                         obj.save()
                     except Selection.DoesNotExist:
                         Selection.objects.create(selection=team, user=user, match=match)
 
                 else:
                     team = None
-                    #delete row
+                    # delete row
                     try:
-                        obj=Selection.objects.get(user=user, match=match)
+                        obj = Selection.objects.get(user=user, match=match)
                         obj.delete()
                     except Selection.DoesNotExist:
-                        pass #Nothing to delete
-                print('Value %s' % (value))
-                print('Team %s' % (team))
+                        pass  # Nothing to delete
 
     return redirect('schedule')
-
 
 
 def register_page(request):
@@ -84,7 +84,7 @@ def register_page(request):
         if form.is_valid():
             form.save()
             user = form.cleaned_data.get('username')
-            messages.success(request, 'Account Created Successfully for User: '+user+' . Please login.')
+            messages.success(request, 'Account Created Successfully for User: ' + user + ' . Please login.')
             return redirect('login')
 
     context = {'form': form}
@@ -104,8 +104,49 @@ def teams_view(request):
 @login_required(login_url='/login')
 def dashboard(request):
     user = User.objects.get(username=request.user)
-    selections = user.selection_set.all()
-    return render(request, 'accounts/dashboard.html', {'selections': selections})
+#    selections = user.selection_set.all()
+    last_match = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by('datetime').last()
+    current_match = Match.objects.filter(Q(result='IP')).order_by('datetime').first()
+    next_match = Match.objects.filter(Q(result='TBD')).order_by('datetime').first()
+    context = {}
+    current_match_sel1 = []
+    current_match_sel2 = []
+    next_match_sel1 = []
+    next_match_sel2 = []
+    last_match_sel1 = []
+    last_match_sel2 = []
+
+    if current_match is not None:
+        context['current_match'] = current_match
+        for i in current_match.selection_set.all():
+            if i.selection == current_match.team1:
+                current_match_sel1.append(i.user.username)
+            if i.selection == current_match.team2:
+                current_match_sel2.append(i.user.username)
+        context['current_match_sel1'] = ", ".join(current_match_sel1)
+        context['current_match_sel2'] = ", ".join(current_match_sel2)
+
+    if next_match is not None:
+        context['next_match'] = next_match
+        for i in next_match.selection_set.all():
+            if i.selection == next_match.team1:
+                next_match_sel1.append(i.user.username)
+            if i.selection == next_match.team2:
+                next_match_sel2.append(i.user.username)
+        context['next_match_sel1'] = ", ".join(next_match_sel1)
+        context['next_match_sel2'] = ", ".join(next_match_sel2)
+
+    if last_match is not None:
+        context['last_match'] = last_match
+        for i in last_match.selection_set.all():
+            if i.selection == last_match.team1:
+                last_match_sel1.append(i.user.username)
+            if i.selection == last_match.team2:
+                last_match_sel2.append(i.user.username)
+        context['last_match_sel1'] = ", ".join(last_match_sel1)
+        context['last_match_sel2'] = ", ".join(last_match_sel2)
+
+    return render(request, 'accounts/dashboard.html', context)
 
 
 @login_required(login_url='/login')
@@ -123,7 +164,7 @@ def schedule_view(request, pk=''):
 
     matches_list = []
     now = datetime.now(timezone.utc)
-    matches = Match.objects.filter(datetime__gte=now, datetime__lte=now+timedelta(days=5))
+    matches = Match.objects.filter(datetime__gte=now, datetime__lte=now + timedelta(days=5))
     for m in matches:
         tmp_dict = {'none_checked': '',
                     'team1_checked': '',
