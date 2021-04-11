@@ -8,7 +8,17 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from datetime import timezone, datetime, timedelta
 from django.template.defaulttags import register
+import urllib.request as urllib2
+from xml.etree.ElementTree import fromstring
+import re
 
+hdr = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+    'Accept-Encoding': 'none',
+    'Accept-Language': 'en-US,en;q=0.8',
+    'Connection': 'keep-alive'}
 
 # Create your views here.
 @register.filter
@@ -78,6 +88,84 @@ def update(request):
                         pass  # Nothing to delete
 
     return redirect('schedule')
+
+
+def maintain(request):
+    now = datetime.now(timezone.utc)
+    next_match = Match.objects.filter(result='TBD').order_by('datetime').first()
+    if next_match is not None:
+        td = next_match.datetime - now
+        if td.days < 0: #match has started, change status to IP
+            next_match.result = "IP"
+            next_match.save()
+    current_match = Match.objects.filter(Q(result='IP')).order_by('datetime').first()
+    if current_match is not None:
+        now4 = now - timedelta(hours=4)
+        td4 = current_match.datetime - now4
+        team1 = current_match.team1.name
+        team2 = current_match.team2.name
+        req = urllib2.Request("http://static.cricinfo.com/rss/livescores.xml", None, hdr)
+        html_page = urllib2.urlopen(req)
+        xml_page = html_page.read()
+        tree = fromstring(xml_page)
+        live = ""
+        for child in tree.iter('item'):
+            if (team1 in child[0].text) and (team2 in child[0].text):
+                # print(child[0].text) # TODO to remove
+                live = child[0].text
+        stats = [[0, 0], [0, 0]]  # team1, team2 [runs, wickets , batting]
+        # print("input is : ", live)  # TODO remove
+        batting = None
+        for s in live.split('v'):
+            if team1 in s:
+                tm = 0
+            else:
+                tm = 1
+            if '*' in s:
+                batting = tm
+
+            i = 0
+            for j in re.findall(r'\d+', s):
+                i += 1
+                if i == 1:
+                    stats[tm][0] = int(j)
+                if i == 2:
+                    stats[tm][1] = int(j)
+
+        # print(stats, batting, td4.days)  # TODO remove
+
+        if (batting is not None) and (td4.days >= 0):  # someone is batting
+            # check batting team scored more and is batting second
+            if stats[batting][0] > stats[1 - batting][0]:
+                # print("team", tm + 1, "has won")   # TODO remove this
+                update_match(current_match, tm+1)
+
+            if stats[batting][1] == 10 and stats[batting][0] < stats[1 - batting][0]:  # team batting second lost
+                # print("team", tm + 1, "has lost")  # TODO remove this
+                update_match(current_match, tm + 1)
+        else:  # match has not started or ended
+            if stats[0][0] > 0 and stats[1][0] > 0:  # Match completed
+                if stats[0][0] > stats[1][0]:
+                    # print("Team1 has won")  # TODO remove this
+                    update_match(current_match, 1)
+                elif stats[0][0] == stats[1][0]:
+                    # print("Match is Tied")  # TODO remove this
+                    update_match(current_match, 0)
+                else:
+                    # print("Team2 has won")  # TODO remove this
+                    update_match(current_match, 2)
+    return HttpResponse("Done")
+
+
+def update_match(obj, team):
+    # print("update match has been called for team = ", team) # TODO remove this
+    if team == 1:
+        obj.result = 'team1'
+    elif team == 2:
+        obj.result = 'team2'
+    else:
+        obj.result = 'NR'
+    obj.save()
 
 
 def register_page(request):
