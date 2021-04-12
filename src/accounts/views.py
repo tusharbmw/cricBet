@@ -114,6 +114,7 @@ def maintain(request):
                 # print(child[0].text) # TODO to remove
                 live = child[0].text
         stats = [[0, 0], [0, 0]]  # team1, team2 [runs, wickets , batting]
+        # print("teams are ", team1, team2)
         # print("input is : ", live)  # TODO remove
         batting = None
         for s in live.split('v'):
@@ -136,7 +137,7 @@ def maintain(request):
 
         if (batting is not None) and (td4.days >= 0):  # someone is batting
             # check batting team scored more and is batting second
-            if stats[batting][0] > stats[1 - batting][0]:
+            if stats[1-batting][0] > 0 and stats[batting][0] > stats[1 - batting][0]:
                 # print("team", tm + 1, "has won")   # TODO remove this
                 update_match(current_match, tm+1)
 
@@ -154,7 +155,7 @@ def maintain(request):
                 else:
                     # print("Team2 has won")  # TODO remove this
                     update_match(current_match, 2)
-    return HttpResponse("Done")
+    return HttpResponse(" "+str(stats)+"batting :"+str(batting)+ " td4 days:"+ str(td4.days))
 
 
 def update_match(obj, team):
