@@ -155,7 +155,7 @@ def maintain(request):
                 else:
                     # print("Team2 has won")  # TODO remove this
                     update_match(current_match, 2)
-    return HttpResponse(" "+str(stats)+"batting :"+str(batting)+ " td4 days:"+ str(td4.days))
+    return HttpResponse(" " + str(stats) + "batting :" + str(batting) + " td4 days:" + str(td4.days))
 
 
 def update_match(obj, team):
@@ -267,6 +267,7 @@ def dashboard(request):
                 next_match_sel2.append(i.user.username)
         context['next_match_sel1'] = ", ".join(next_match_sel1)
         context['next_match_sel2'] = ", ".join(next_match_sel2)
+        context['next_match_timer'] = int(next_match.datetime.timestamp() * 1000)
 
     if last_match is not None:
         context['last_match'] = last_match
