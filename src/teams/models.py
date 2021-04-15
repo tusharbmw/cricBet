@@ -25,7 +25,7 @@ class Match(models.Model):
     team2 = models.ForeignKey(Team, on_delete=models.SET_NULL, null="True", related_name='team2')
     description = models.TextField( blank="True", null="True")
     venue = models.CharField(max_length=40, blank="True", null="True")
-    result = models.CharField(max_length=10, choices=RESULTS)
+    result = models.CharField(max_length=10, choices=RESULTS ,default="TBD")
     datetime = models.DateTimeField()
     tournaments = models.CharField(max_length=50, default="IPL", blank="True", null="True")
 
