@@ -138,11 +138,11 @@ def maintain(request):
         if (batting is not None) and (td4.days >= 0):  # someone is batting
             # check batting team scored more and is batting second
             if stats[1-batting][0] > 0 and stats[batting][0] > stats[1 - batting][0]:
-                print("team", batting + 1, "has won")   # TODO remove this
+                # print("team", batting + 1, "has won")   # TODO remove this
                 update_match(current_match, batting+1)
 
             if stats[batting][1] == 10 and stats[batting][0] < stats[1 - batting][0]:  # team batting second lost
-                print("team", 1 - batting + 1, "has lost")  # TODO remove this
+                # print("team", batting + 1, "has lost")  # TODO remove this
                 update_match(current_match, 1 - batting + 1)
         else:  # match has not started or ended
             if stats[0][0] > 0 and stats[1][0] > 0:  # Match completed
