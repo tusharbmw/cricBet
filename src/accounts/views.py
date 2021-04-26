@@ -193,7 +193,6 @@ def teams_view(request):
     return render(request, 'accounts/teams.html', {'teams': teams})
 
 
-@login_required(login_url='/login')
 def leaderboard(request):
     context = {}
     # initialize win and loss
@@ -319,3 +318,42 @@ def schedule_view(request, pk=''):
         matches_list.append(tmp_dict)
     return render(request, 'accounts/schedule.html',
                   {'matches_list': matches_list, 'uname': user.username, 'disabled': disabled})
+
+
+def results_view(request):
+
+    matches_obj = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by('datetime')
+    context = {}
+    matches = []
+    for current_match in matches_obj:
+        current_match_sel1 = []
+        current_match_sel2 = []
+        result = ''
+        if current_match is not None:
+            for i in current_match.selection_set.all():
+                if i.selection == current_match.team1:
+                    current_match_sel1.append(i.user.username)
+                if i.selection == current_match.team2:
+                    current_match_sel2.append(i.user.username)
+
+            if current_match.result == 'team1':
+                result = current_match.team1
+            elif current_match.result == 'team2':
+                result = current_match.team2
+            else:
+                result = 'Tied/No Result'
+            matches_dict = {'team1': current_match.team1,
+                    'team2': current_match.team2,
+                    'id': current_match.id,
+                    'datetime': current_match.datetime,
+                    'result': result,
+                    'venue': current_match.venue,
+                    'description': current_match.description,
+                    'match_sel1': ", ".join(current_match_sel1),
+                    'match_sel2': ", ".join(current_match_sel2)}
+
+            matches.append(matches_dict)
+
+    context["matches"] = matches
+    return render(request, 'accounts/results.html', context)
+

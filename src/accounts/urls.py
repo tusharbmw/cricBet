@@ -15,4 +15,5 @@ urlpatterns = [
     path('update/', views.update, name='update'),
     path('leaderboard/', views.leaderboard, name='leaderboard'),
     path('maintain/', views.maintain, name='maintain'),
+    path('results/', views.results_view, name='results'),
 ]

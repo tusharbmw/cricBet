@@ -1,0 +1,31 @@
+{% extends 'accounts/main.html' %}
+
+{% block content %}
+<h1> Match Results </h1>
+<table class="table" border="2">
+        <tr>
+        <th scope="col"> Match </th>
+        <th scope="col"> Date </th>
+        <th scope="col"> Team1 Selected by</th>
+        <th scope="col"> Match team1 </th>
+        <th scope="col"> Match team2 </th>
+        <th scope="col"> Team2 Selected by</th>
+        <th scope="col"> Match venue </th>
+        <th scope="col"> Match Winner </th>
+    <tr>
+    {% for current_match in matches %}
+    <tr>
+    <td>{{current_match.description}}</td>
+    <td>{{current_match.datetime}}</td>
+    <td>{{current_match.match_sel1}}</td>
+    <td>{{current_match.team1}}</td>
+    <td>{{current_match.team2}}</td>
+    <td>{{current_match.match_sel2}}</td>
+    <td>{{current_match.venue}}</td>
+    <td>{{current_match.result}}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endblock %}
