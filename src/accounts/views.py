@@ -319,7 +319,7 @@ def schedule_view(request, pk=''):
     return render(request, 'accounts/schedule.html',
                   {'matches_list': matches_list, 'uname': user.username, 'disabled': disabled})
 
-
+@login_required(login_url='/login')
 def results_view(request):
 
     matches_obj = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by('datetime')
