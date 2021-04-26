@@ -297,7 +297,7 @@ def schedule_view(request, pk=''):
 
     matches_list = []
     now = datetime.now(timezone.utc)
-    matches = Match.objects.filter(datetime__gte=now, datetime__lte=now + timedelta(days=5))
+    matches = Match.objects.filter(datetime__gte=now, datetime__lte=now + timedelta(days=5)).order_by('datetime')
     for m in matches:
         tmp_dict = {'none_checked': '',
                     'team1_checked': '',
