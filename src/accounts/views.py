@@ -229,8 +229,6 @@ def leaderboard(request):
                 lost[u] += len(mr_sel2)
             for u in mr_sel2:
                 won[u] += len(mr_sel1)
-
-                    # Tushar to be continued
     total = {}
 
     for u in won.keys():

@@ -11,9 +11,6 @@
           <a class="nav-link" href="/dashboard">Dashboard</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/admin">Admin</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="/schedule">BET</a>
         </li>
         <li class="nav-item">
@@ -30,19 +27,16 @@
               {%for i in all_users%}
                 <li><a class="dropdown-item" href="/schedule/{{i.username}}">{{i.username}}</a></li>
               {% endfor%}
-
           </ul>
         </li>
         <li class="nav-item">
-          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">CashOut</a>
+          <a class="nav-link" href="/admin">Admin</a>
         </li>
       </ul>
       <form class="d-flex">
         <span class="form-control me-2">Hello {{request.user}} </span>
         <button type="button" class="btn btn-outline-danger" onclick="window.location.href='/logout'">LogOut</button>
       </form>
-
-
     </div>
   </div>
 </nav>
