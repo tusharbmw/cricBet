@@ -56,6 +56,7 @@ def update(request):
     if request.method == "POST":
         user = User.objects.get(username=request.user)
         now = datetime.now(timezone.utc)
+        err = 0
         for key, value in request.POST.items():
             if key.startswith("options_"):
                 match_id = key.split('_')[1]
@@ -77,6 +78,8 @@ def update(request):
                         obj.save()
                     except Selection.DoesNotExist:
                         Selection.objects.create(selection=team, user=user, match=match)
+                    except:
+                        err += 1
 
                 else:
                     team = None
@@ -86,7 +89,12 @@ def update(request):
                         obj.delete()
                     except Selection.DoesNotExist:
                         pass  # Nothing to delete
-
+                    except:
+                        err += 1
+    if err == 0:
+        messages.success(request, "Picks saved successfully. Good Luck! ")
+    else:
+        messages.error(request, "Issue in saving picks. Please try again later")
     return redirect('schedule')
 
 
@@ -157,6 +165,7 @@ def maintain(request):
                     update_match(current_match, 2)
         return HttpResponse(" " + str(stats) + "batting :" + str(batting) + " td4 days:" + str(td4.days))
     return HttpResponse("No Match to update")
+
 
 def update_match(obj, team):
     # print("update match has been called for team = ", team) # TODO remove this
