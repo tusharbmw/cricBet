@@ -34,8 +34,15 @@
         </li>
       </ul>
       <form class="d-flex">
-        <span class="form-control me-2">Hello {{request.user}} </span>
+        <div class="d-grid gap-2 d-md-block">
+        <span class="form-control me-2">Welcome {{request.user}} </span>
+        {%if no_bets is not None%}
+          <button type="button" class="btn btn-primary" onclick="window.location.href='/schedule'">
+          No Bets <span class="badge bg-secondary">{{no_bets}}</span>
+          </button>
+        {% endif %}
         <button type="button" class="btn btn-outline-danger" onclick="window.location.href='/logout'">LogOut</button>
+        </div>
       </form>
     </div>
   </div>

@@ -20,10 +20,27 @@ hdr = {
     'Accept-Language': 'en-US,en;q=0.8',
     'Connection': 'keep-alive'}
 
+
 # Create your views here.
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+
+def get_missing_bet_count(user):
+    try:
+        user = User.objects.get(username=user)
+    except:
+        return -1
+    if user is None:
+        return -1
+    cnt = 0
+    now = datetime.now(timezone.utc)
+    matches = Match.objects.filter(datetime__gte=now, datetime__lte=now + timedelta(days=5)).order_by('datetime')
+    for m in matches:
+        if m.selection_set.filter(user=user).count() == 0:
+            cnt += 1
+    return cnt
 
 
 def home(request):
@@ -236,6 +253,9 @@ def leaderboard(request):
     context['total'] = sorted(total.items(), key=lambda x: x[1], reverse=True)
     context['lost'] = lost
     context['won'] = won
+    cnt = get_missing_bet_count(request.user)
+    if cnt >= 0:
+        context['no_bets'] = cnt
     return render(request, 'accounts/leaderboard.html', context)
 
 
@@ -285,6 +305,10 @@ def dashboard(request):
         context['last_match_sel1'] = ", ".join(last_match_sel1)
         context['last_match_sel2'] = ", ".join(last_match_sel2)
 
+    cnt = get_missing_bet_count(request.user)
+    if cnt >= 0:
+        context['no_bets'] = cnt
+
     return render(request, 'accounts/dashboard.html', context)
 
 
@@ -300,7 +324,7 @@ def schedule_view(request, pk=''):
         disabled = ''
     else:
         disabled = 'disabled'
-
+    context = {}
     matches_list = []
     now = datetime.now(timezone.utc)
     matches = Match.objects.filter(datetime__gte=now, datetime__lte=now + timedelta(days=5)).order_by('datetime')
@@ -323,8 +347,13 @@ def schedule_view(request, pk=''):
             else:
                 tmp_dict['team2_checked'] = 'checked'
         matches_list.append(tmp_dict)
-    return render(request, 'accounts/schedule.html',
-                  {'matches_list': matches_list, 'uname': user.username, 'disabled': disabled})
+    cnt = get_missing_bet_count(request.user)
+    if cnt >=0:
+        context['no_bets'] = cnt
+    context['matches_list'] = matches_list
+    context['uname'] = user.username
+    context['disabled'] = disabled
+    return render(request, 'accounts/schedule.html', context)
 
 @login_required(login_url='/login')
 def results_view(request):
@@ -362,5 +391,8 @@ def results_view(request):
             matches.append(matches_dict)
 
     context["matches"] = matches
+    cnt = get_missing_bet_count(request.user)
+    if cnt >=0:
+        context['no_bets'] = cnt
     return render(request, 'accounts/results.html', context)
 
