@@ -26,3 +26,6 @@ iptables -P OUTPUT ACCEPT
 iptables -P FORWARD ACCEPT
 
 iptables -F
+
+To renew certificate
+sudo certbot renew --nginx
