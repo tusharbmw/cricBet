@@ -30,6 +30,6 @@ iptables -F
 To renew certificate
 sudo certbot renew --nginx
 
-Start gunicorn
+Start gunicorn (from /home/opc/cricBet)
 
 nohup bin/gunicorn_start &
