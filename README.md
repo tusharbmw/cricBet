@@ -29,3 +29,7 @@ iptables -F
 
 To renew certificate
 sudo certbot renew --nginx
+
+Start gunicorn
+
+nohup bin/gunicorn_start &
