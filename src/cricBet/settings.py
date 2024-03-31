@@ -129,3 +129,5 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 
+# setting default primary key
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
