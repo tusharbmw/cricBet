@@ -11,6 +11,7 @@ from django.template.defaulttags import register
 import urllib.request as urllib2
 from xml.etree.ElementTree import fromstring
 import re
+from . import cricfeed
 
 hdr = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -120,7 +121,7 @@ def maintain(request):
     next_match = Match.objects.filter(result='TBD').order_by('datetime').first()
     if next_match is not None:
         td = next_match.datetime - now
-        if td.days < 0: #match has started, change status to IP
+        if td.days < 0:  # match has started, change status to IP
             next_match.result = "IP"
             next_match.save()
     current_match = Match.objects.filter(Q(result='IP')).order_by('datetime').first()
@@ -162,9 +163,9 @@ def maintain(request):
 
         if (batting is not None) and (td4.days >= 0):  # someone is batting
             # check batting team scored more and is batting second
-            if stats[1-batting][0] > 0 and stats[batting][0] > stats[1 - batting][0]:
+            if stats[1 - batting][0] > 0 and stats[batting][0] > stats[1 - batting][0]:
                 # print("team", batting + 1, "has won")   # TODO remove this
-                update_match(current_match, batting+1)
+                update_match(current_match, batting + 1)
 
             if stats[batting][1] == 10 and stats[batting][0] < stats[1 - batting][0]:  # team batting second lost
                 # print("team", batting + 1, "has lost")  # TODO remove this
@@ -195,6 +196,45 @@ def update_match(obj, team):
     obj.save()
 
 
+def add_new_match(match_info):
+    team1 = Team.objects.filter(name=match_info['Team1'])[0]
+    team2 = Team.objects.filter(name=match_info['Team2'])[0]
+    m = Match(match_id=match_info['match_id'],
+              team1=team1,
+              team2=team2,
+              description=match_info['Description'],
+              venue=match_info['venue'],
+              result="",
+              datetime=datetime.strptime(match_info['datetime'], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc),
+              tournament=match_info['tournament']
+              )
+    m.save()
+
+
+def fill_match(request):
+    now = datetime.now(timezone.utc)
+    matches_data = cricfeed.get_series_info()
+    updated_cnt = 0
+    for match_data in matches_data:
+        print(match_data['datetime'])
+        match_data_dt = datetime.strptime(match_data['datetime'], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+        if match_data_dt < now:
+            print("Skipping as old match")
+            continue
+        elif Match.objects.filter(Q(match_id=match_data['match_id'])).exists():
+            print("match already exist", match_data['match_id'])
+            continue
+        elif Match.objects.filter(Q(datetime=match_data_dt)).exists():
+            print("match already exist at same time", match_data_dt)
+            continue
+        else:
+            print("Lets add this match", match_data)
+            add_new_match(match_data)
+            updated_cnt += 1
+
+    return HttpResponse("Total matches updated " + str(updated_cnt))
+
+
 def register_page(request):
     form = UserCreationForm()
     if request.method == 'POST':
@@ -219,6 +259,15 @@ def teams_view(request):
     return render(request, 'accounts/teams.html', {'teams': teams})
 
 
+def whatsnew_view(request):
+    whatsnew = [{'change': 'Package upgrades', 'description': 'Update Django and other python packages'},
+                {'change': 'Python upgrades', 'description': 'Upgrade to Python 3.10'},
+                {'change': 'Server update', 'description': 'Move from Cent OS 7 to Oracle Linux 9'},
+                {'change': 'DB upgrades', 'description': 'Update Database from sqllite to Oracle DB v9'}
+                ]
+    return render(request, 'accounts/whatsnew.html', {'whatsnew': whatsnew})
+
+
 def leaderboard(request):
     context = {}
     # initialize win and loss
@@ -241,7 +290,7 @@ def leaderboard(request):
                 won[u] += len(mr_sel2)
             for u in mr_sel2:
                 lost[u] += len(mr_sel1)
-        else:   # team2 won
+        else:  # team2 won
             for u in mr_sel1:
                 lost[u] += len(mr_sel2)
             for u in mr_sel2:
@@ -249,7 +298,7 @@ def leaderboard(request):
     total = {}
 
     for u in won.keys():
-        total[u] = won[u]-lost[u]
+        total[u] = won[u] - lost[u]
     context['total'] = sorted(total.items(), key=lambda x: x[1], reverse=True)
     context['lost'] = lost
     context['won'] = won
@@ -262,8 +311,9 @@ def leaderboard(request):
 @login_required(login_url='/login')
 def dashboard(request):
     user = User.objects.get(username=request.user)
-#    selections = user.selection_set.all()
-    last_match = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by('datetime').last()
+    #    selections = user.selection_set.all()
+    last_match = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by(
+        'datetime').last()
     current_match = Match.objects.filter(Q(result='IP')).order_by('datetime').first()
     next_match = Match.objects.filter(Q(result='TBD')).order_by('datetime').first()
     context = {}
@@ -348,16 +398,16 @@ def schedule_view(request, pk=''):
                 tmp_dict['team2_checked'] = 'checked'
         matches_list.append(tmp_dict)
     cnt = get_missing_bet_count(request.user)
-    if cnt >=0:
+    if cnt >= 0:
         context['no_bets'] = cnt
     context['matches_list'] = matches_list
     context['uname'] = user.username
     context['disabled'] = disabled
     return render(request, 'accounts/schedule.html', context)
 
+
 @login_required(login_url='/login')
 def results_view(request):
-
     matches_obj = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by('datetime')
     context = {}
     matches = []
@@ -379,20 +429,19 @@ def results_view(request):
             else:
                 result = 'Tied/No Result'
             matches_dict = {'team1': current_match.team1,
-                    'team2': current_match.team2,
-                    'id': current_match.id,
-                    'datetime': current_match.datetime,
-                    'result': result,
-                    'venue': current_match.venue,
-                    'description': current_match.description,
-                    'match_sel1': ", ".join(current_match_sel1),
-                    'match_sel2': ", ".join(current_match_sel2)}
+                            'team2': current_match.team2,
+                            'id': current_match.id,
+                            'datetime': current_match.datetime,
+                            'result': result,
+                            'venue': current_match.venue,
+                            'description': current_match.description,
+                            'match_sel1': ", ".join(current_match_sel1),
+                            'match_sel2': ", ".join(current_match_sel2)}
 
             matches.append(matches_dict)
 
     context["matches"] = matches
     cnt = get_missing_bet_count(request.user)
-    if cnt >=0:
+    if cnt >= 0:
         context['no_bets'] = cnt
     return render(request, 'accounts/results.html', context)
-

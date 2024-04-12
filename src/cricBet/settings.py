@@ -20,7 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'pe3uv7tg38dcl^1mav#^3mwmn2sc1l9!icx&axd-v440ns$g(q26'
+#SECRET_KEY = 'pe3uv7tg38dcl^1mav#^3mwmn2sc1l9!icx&axd-v440ns$g(q26'
+SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -79,10 +80,19 @@ WSGI_APPLICATION = 'cricBet.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'devdb.sqlite3',
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'devdb.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.oracle",
+        "NAME": os.environ["DB_NAME"],
+        "USER": os.environ["DB_DJ_USER"],
+        "PASSWORD": os.environ["DB_DJ_PWD"],
     }
 }
 

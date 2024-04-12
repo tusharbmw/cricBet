@@ -27,7 +27,8 @@ class Match(models.Model):
     venue = models.CharField(max_length=40, blank="True", null="True")
     result = models.CharField(max_length=10, choices=RESULTS ,default="TBD")
     datetime = models.DateTimeField()
-    tournaments = models.CharField(max_length=50, default="IPL", blank="True", null="True")
+    tournament = models.CharField(max_length=50, default="IPL", blank="True", null="True")
+    match_id = models.CharField(max_length=50, blank="True", null="True")
 
     def __str__(self):
         return self.description

@@ -16,4 +16,7 @@ urlpatterns = [
     path('leaderboard/', views.leaderboard, name='leaderboard'),
     path('maintain/', views.maintain, name='maintain'),
     path('results/', views.results_view, name='results'),
+    path('home/', views.home, name='home'),
+    path('whatsnew/',views.whatsnew_view, name='whatsnew'),
+    path('fill_match/',views.fill_match, name='fill_match'),
 ]

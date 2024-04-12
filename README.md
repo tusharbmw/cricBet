@@ -33,3 +33,14 @@ sudo certbot renew --nginx
 Start gunicorn (from /home/opc/cricBet)
 
 nohup bin/gunicorn_start &
+
+For linux you will may have to so that nginx can access reverse proxy
+sudo setsebool -P httpd_can_network_connect 1
+
+And
+sudo semanage permissive -a httpd_t
+
+
+Oracle: 
+Need to grant access to tablespace to user
+GRANT UNLIMITED TABLESPACE TO user;
