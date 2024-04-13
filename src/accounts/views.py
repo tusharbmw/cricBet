@@ -124,64 +124,25 @@ def maintain(request):
         if td.days < 0:  # match has started, change status to IP
             next_match.result = "IP"
             next_match.save()
-    current_match = Match.objects.filter(Q(result='IP')).order_by('datetime').first()
-    if current_match is not None:
-        now4 = now - timedelta(hours=4)
-        td4 = current_match.datetime - now4
+    upd_count = 0
+    for current_match in Match.objects.filter(Q(result='IP')).order_by('datetime'):
         team1 = current_match.team1.name
         team2 = current_match.team2.name
-        req = urllib2.Request("http://static.cricinfo.com/rss/livescores.xml", None, hdr)
-        html_page = urllib2.urlopen(req)
-        xml_page = html_page.read()
-        tree = fromstring(xml_page)
-        live = ""
-        for child in tree.iter('item'):
-            if (team1 in child[0].text) and (team2 in child[0].text):
-                # print(child[0].text) # TODO to remove
-                live = child[0].text
-        stats = [[0, 0], [0, 0]]  # team1, team2 [runs, wickets , batting]
-        # print("teams are ", team1, team2)
-        # print("input is : ", live)  # TODO remove
-        batting = None
-        for s in live.split('v'):
-            if team1 in s:
-                tm = 0
-            else:
-                tm = 1
-            if '*' in s:
-                batting = tm
+        winner = cricfeed.get_match_info(current_match.match_id)
+        if winner == "TBD" or winner == "IP":
+            continue
+        if winner == team1:
+            update_match(current_match, 1)
+            upd_count += 1
+        elif winner == team2:
+            update_match(current_match, 2)
+            upd_count += 1
+        elif winner == "No Winner":
+            update_match(current_match, 0)
+            upd_count += 1
 
-            i = 0
-            for j in re.findall(r'\d+', s):
-                i += 1
-                if i == 1:
-                    stats[tm][0] = int(j)
-                if i == 2:
-                    stats[tm][1] = int(j)
-
-        # print(stats, batting, td4.days)  # TODO remove
-
-        if (batting is not None) and (td4.days >= 0):  # someone is batting
-            # check batting team scored more and is batting second
-            if stats[1 - batting][0] > 0 and stats[batting][0] > stats[1 - batting][0]:
-                # print("team", batting + 1, "has won")   # TODO remove this
-                update_match(current_match, batting + 1)
-
-            if stats[batting][1] == 10 and stats[batting][0] < stats[1 - batting][0]:  # team batting second lost
-                # print("team", batting + 1, "has lost")  # TODO remove this
-                update_match(current_match, 1 - batting + 1)
-        else:  # match has not started or ended
-            if stats[0][0] > 0 and stats[1][0] > 0:  # Match completed
-                if stats[0][0] > stats[1][0]:
-                    # print("Team1 has won")  # TODO remove this
-                    update_match(current_match, 1)
-                elif stats[0][0] == stats[1][0]:
-                    # print("Match is Tied")  # TODO remove this
-                    update_match(current_match, 0)
-                else:
-                    # print("Team2 has won")  # TODO remove this
-                    update_match(current_match, 2)
-        return HttpResponse(" " + str(stats) + "batting :" + str(batting) + " td4 days:" + str(td4.days))
+    if upd_count > 0:
+        return HttpResponse("%s matches updated" % str(upd_count))
     return HttpResponse("No Match to update")
 
 
@@ -260,12 +221,15 @@ def teams_view(request):
 
 
 def whatsnew_view(request):
-    whatsnew = [{'change': 'April 14,2024 Matches auto add', 'description': ''},
-                {'change': 'April 13,2024 FA icons updated', 'description': 'Update FA icon version to v6.5.2 from v5.6.1'},
-                {'change': 'April 13,2024 Package upgrades', 'description': 'Update Django and other python packages'},
-                {'change': 'April 13,2024 Python upgrades', 'description': 'Upgrade to Python 3.10'},
-                {'change': 'April 13,2024 Server update', 'description': 'Move from Cent OS 7 to Oracle Linux 9'},
-                {'change': 'April 13,2024 DB upgrades', 'description': 'Update Database from sqllite to Oracle DB v19c'}
+    whatsnew = [{'change': 'April 14,2024 Matches results', 'description': 'cric API integration for faster/accurate '
+                                                                           'result updates'},
+                {'change': 'April 13,2024 Matches auto add', 'description': 'cric API integration to pull match info'},
+                {'change': 'April 12,2024 FA icons updated',
+                 'description': 'Update FA icon version to v6.5.2 from v5.6.1'},
+                {'change': 'April 12,2024 Package upgrades', 'description': 'Update Django and other python packages'},
+                {'change': 'April 12,2024 Python upgrades', 'description': 'Upgrade to Python 3.10'},
+                {'change': 'April 12,2024 Server update', 'description': 'Move from Cent OS 7 to Oracle Linux 9'},
+                {'change': 'April 12,2024 DB upgrades', 'description': 'Update Database from sqllite to Oracle DB v19c'}
                 ]
     return render(request, 'accounts/whatsnew.html', {'whatsnew': whatsnew})
 

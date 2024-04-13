@@ -14,7 +14,7 @@ def get_series_info(tournament_id=None):
         tournament_id = CRIC_TOURNAMENT_ID
     CRIC_SERIES_INFO_URL = "https://api.cricapi.com/v1/series_info?apikey=" + CRIC_API_KEY + "&id=" + tournament_id
     # open url and save json output into a file
-    urllib.request.urlretrieve(CRIC_SERIES_INFO_URL, filename="series_info.json")
+    # urllib.request.urlretrieve(CRIC_SERIES_INFO_URL, filename="series_info.json")
 
     # open url and save json output into json object
     with urllib.request.urlopen(CRIC_SERIES_INFO_URL) as url:
@@ -22,9 +22,11 @@ def get_series_info(tournament_id=None):
     #     print(data)
 
     # open json file into json object
-    #with open('series_info.json') as json_file:
-    #    data = json.load(json_file)
+    # with open('series_info.json') as json_file:
+    #     data = json.load(json_file)
     out_match = []
+    if 'data' not in data:
+        return
     for match in data["data"]['matchList']:
         tmp_match = {}
         if match["teams"][0] == "Tbc" or match["teams"][1] == "Tbc":
@@ -48,9 +50,40 @@ def get_series_info(tournament_id=None):
                 tmp_match["result"] = "team2"
         else:
             tmp_match["result"] = "NR"
+        print(tmp_match)
         out_match.append(tmp_match)
 
     return out_match
 
 
-get_series_info()
+def get_match_info(match_id):
+    if len(match_id) < 5:
+        return "ERR"
+    CRIC_MATCH_INFO_URL = "https://api.cricapi.com/v1/match_info?apikey=" + CRIC_API_KEY + "&id=" + match_id
+    # open url and save json output into a file
+    # urllib.request.urlretrieve(CRIC_MATCH_INFO_URL, filename="match_info.json")
+
+    # open url and save json output into json object
+    with urllib.request.urlopen(CRIC_MATCH_INFO_URL) as url:
+        data = json.loads(url.read().decode())
+
+    # open json file into json object
+    # with open('match_info_notstarted.json') as json_file:
+    #     data = json.load(json_file)
+    print(data)
+    if data['status'] != 'success':
+        print("API call failed")
+        return "TBD"
+    match_data = data['data']
+    if match_data['matchStarted']:
+        if match_data['matchEnded']:
+            print("Match %s ended and winner is " % match_id, match_data['matchWinner'])
+            return match_data['matchWinner']
+        else:
+            print("Match %s in progress" % match_id)
+            return "IP"
+    print("Match %s not started" % match_id)
+    return "TBD"
+
+# get_series_info()
+# print(get_match_info('18998bfa-aabc-48e3-b73e-d15f56493fa6'))
