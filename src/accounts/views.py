@@ -204,7 +204,7 @@ def add_new_match(match_info):
               team2=team2,
               description=match_info['Description'],
               venue=match_info['venue'],
-              result="",
+              result="TBD",
               datetime=datetime.strptime(match_info['datetime'], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc),
               tournament=match_info['tournament']
               )
@@ -260,10 +260,12 @@ def teams_view(request):
 
 
 def whatsnew_view(request):
-    whatsnew = [{'change': 'Package upgrades', 'description': 'Update Django and other python packages'},
-                {'change': 'Python upgrades', 'description': 'Upgrade to Python 3.10'},
-                {'change': 'Server update', 'description': 'Move from Cent OS 7 to Oracle Linux 9'},
-                {'change': 'DB upgrades', 'description': 'Update Database from sqllite to Oracle DB v9'}
+    whatsnew = [{'change': 'April 14,2024 Matches auto add', 'description': ''},
+                {'change': 'April 13,2024 FA icons updated', 'description': 'Update FA icon version to v6.5.2 from v5.6.1'},
+                {'change': 'April 13,2024 Package upgrades', 'description': 'Update Django and other python packages'},
+                {'change': 'April 13,2024 Python upgrades', 'description': 'Upgrade to Python 3.10'},
+                {'change': 'April 13,2024 Server update', 'description': 'Move from Cent OS 7 to Oracle Linux 9'},
+                {'change': 'April 13,2024 DB upgrades', 'description': 'Update Database from sqllite to Oracle DB v19c'}
                 ]
     return render(request, 'accounts/whatsnew.html', {'whatsnew': whatsnew})
 
