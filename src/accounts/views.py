@@ -221,7 +221,8 @@ def teams_view(request):
 
 
 def whatsnew_view(request):
-    whatsnew = [{'change': 'April 14,2024 Matches results', 'description': 'cric API integration for faster/accurate '
+    whatsnew = [{'change': 'April 17,2024 Logic for max skipped bet', 'description': 'if user too many skipped bets, user will get disqualified'},
+                {'change': 'April 14,2024 Matches results', 'description': 'cric API integration for faster/accurate '
                                                                            'result updates'},
                 {'change': 'April 13,2024 Matches auto add', 'description': 'cric API integration to pull match info'},
                 {'change': 'April 12,2024 FA icons updated',
@@ -235,14 +236,21 @@ def whatsnew_view(request):
 
 
 def leaderboard(request):
+    max_skipped_allowed = 30
     context = {}
     # initialize win and loss
     won = {}
     lost = {}
+    skipped = {}
+    matches_with_result = Match.objects.filter(Q(result='team1') | Q(result='team2'))
     for u in User.objects.all():
         won[u.username] = 0
         lost[u.username] = 0
-    matches_with_result = Match.objects.filter(Q(result='team1') | Q(result='team2'))
+        skipped[u.username] = 0
+        for mr in matches_with_result:
+            if mr.selection_set.filter(user=u).count() == 0:
+                skipped[u.username] += 1
+
     for mr in matches_with_result:
         mr_sel1 = []
         mr_sel2 = []
@@ -265,9 +273,13 @@ def leaderboard(request):
 
     for u in won.keys():
         total[u] = won[u] - lost[u]
+    for u in skipped.keys():
+        if skipped[u] > max_skipped_allowed:
+            total[u] = -999
     context['total'] = sorted(total.items(), key=lambda x: x[1], reverse=True)
     context['lost'] = lost
     context['won'] = won
+    context['skipped'] = skipped
     cnt = get_missing_bet_count(request.user)
     if cnt >= 0:
         context['no_bets'] = cnt

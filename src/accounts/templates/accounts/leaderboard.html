@@ -8,6 +8,7 @@
         <th scope="col"> User </th>
         <th scope="col"> Won </th>
         <th scope="col"> Lost </th>
+        <th scope="col"> Skipped bets </th>
         <th scope="col"> Total Points </th>
 
     <tr>
@@ -16,6 +17,7 @@
     <td>{{u.0}}</td>
     <td>{{won|get_item:u.0}}</td>
     <td>{{lost|get_item:u.0}}</td>
+    <td>{{skipped|get_item:u.0}}</td>
     <td>{{u.1}}</td>
     </tr>
     {% endfor %}
