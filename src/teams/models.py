@@ -38,5 +38,6 @@ class Selection(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null="True")
     match = models.ForeignKey(Match, on_delete=models.SET_NULL, null="True")
     selection = models.ForeignKey(Team, on_delete=models.SET_NULL, null="True")
+    hidden = models.BooleanField(default=False)
 
 

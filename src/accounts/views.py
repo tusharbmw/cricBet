@@ -221,7 +221,7 @@ def teams_view(request):
 
 
 def whatsnew_view(request):
-    whatsnew = [{'change': 'April 17,2024 Logic for max skipped bet', 'description': 'if user too many skipped bets, user will get disqualified'},
+    whatsnew = [{'change': 'April 17,2024 Logic for max skipped bet', 'description': 'if used too many skipped bets, user will get disqualified'},
                 {'change': 'April 14,2024 Matches results', 'description': 'cric API integration for faster/accurate '
                                                                            'result updates'},
                 {'change': 'April 13,2024 Matches auto add', 'description': 'cric API integration to pull match info'},
@@ -315,9 +315,9 @@ def dashboard(request):
     if next_match is not None:
         context['next_match'] = next_match
         for i in next_match.selection_set.all():
-            if i.selection == next_match.team1:
+            if i.selection == next_match.team1 and i.hidden is False:
                 next_match_sel1.append(i.user.username)
-            if i.selection == next_match.team2:
+            if i.selection == next_match.team2 and i.hidden is False:
                 next_match_sel2.append(i.user.username)
         context['next_match_sel1'] = ", ".join(next_match_sel1)
         context['next_match_sel2'] = ", ".join(next_match_sel2)
@@ -347,7 +347,6 @@ def schedule_view(request, pk=''):
     except User.DoesNotExist:
         user = User.objects.get(username=request.user)
 
-    #    user = User.objects.get(username="test1")
     if user == request.user:
         disabled = ''
     else:
@@ -374,6 +373,12 @@ def schedule_view(request, pk=''):
                 tmp_dict['team1_checked'] = 'checked'
             else:
                 tmp_dict['team2_checked'] = 'checked'
+            # hidden bet logic
+            if user != request.user and m.selection_set.filter(user=user).first().hidden:
+                tmp_dict['none_checked'] = 'checked'
+                tmp_dict['team1_checked'] = ''
+                tmp_dict['team2_checked'] = ''
+
         matches_list.append(tmp_dict)
     cnt = get_missing_bet_count(request.user)
     if cnt >= 0:
