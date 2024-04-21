@@ -1,7 +1,7 @@
 {% load static %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#"><img src="{% static 'images/logo.PNG' %}"> </a>
+    <a class="navbar-brand" href="#"><img width="100" height="100" src="{% static 'images/logo.PNG' %}"> </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -35,7 +35,7 @@
       </ul>
       <form class="d-flex">
         <div class="d-grid gap-2 d-md-block">
-        <span class="form-control me-2">Welcome {{request.user}} </span>
+        <span class="form-control me-2 text-center">Welcome {{request.user}} </span>
         {%if no_bets is not None%}
           <button type="button" class="btn btn-primary" onclick="window.location.href='/schedule'">
           No Bets <span class="badge bg-secondary">{{no_bets}}</span>
