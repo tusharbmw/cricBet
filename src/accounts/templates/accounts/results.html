@@ -11,6 +11,7 @@
         <th scope="col"> Match team2 </th>
         <th scope="col"> Team2 Selected by</th>
         <th scope="col"> Match venue </th>
+        <th scope="col"> Points value </th>
         <th scope="col"> Match Winner </th>
     <tr>
     {% for current_match in matches %}
@@ -22,6 +23,7 @@
     <td>{{current_match.team2}}</td>
     <td>{{current_match.match_sel2}}</td>
     <td>{{current_match.venue}}</td>
+    <td>{{current_match.match_points}}</td>
     <td>{{current_match.result}}</td>
     </tr>
     {% endfor %}

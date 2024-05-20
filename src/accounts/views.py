@@ -417,6 +417,7 @@ def dashboard(request):
                         'result': current_match.result,
                         'venue': current_match.venue,
                         'description': current_match.description,
+                        'match_points': current_match.match_points,
                         'match_sel1': ", ".join(current_match_sel1),
                         'match_sel2': ", ".join(current_match_sel2)}
 
@@ -475,6 +476,7 @@ def schedule_view(request, pk=''):
                     'datetime': m.datetime,
                     'result': m.result,
                     'venue': m.venue,
+                    'match_points': m.match_points,
                     'description': m.description}
         if m.selection_set.filter(user=user).count() == 0:
             tmp_dict['none_checked'] = 'checked'
@@ -527,6 +529,7 @@ def results_view(request):
                             'datetime': current_match.datetime,
                             'result': result,
                             'venue': current_match.venue,
+                            'match_points': current_match.match_points,
                             'description': current_match.description,
                             'match_sel1': ", ".join(current_match_sel1),
                             'match_sel2': ", ".join(current_match_sel2)}

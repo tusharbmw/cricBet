@@ -12,6 +12,7 @@
         <th scope="col"> Team2 </th>
         <th scope="col"> Team2 Selected by</th>
         <th scope="col"> Match Venue </th>
+        <th scope="col"> Points Value </th>
         <th scope="col"> Match Status </th>
     <tr>
 {% for current_match in current_matches %}
@@ -22,6 +23,7 @@
     <td><img src="{{current_match.team2.logo_url}}" class="rounded-circle border border-5" alt="{{current_match.team2.description}}"> {{current_match.team2}}</td>
     <td>{{current_match.match_sel2}}</td>
     <td>{{current_match.venue}}</td>
+    <td>{{current_match.match_points}}</td>
     {% if current_match.result == 'IP' %}
        <td> <div class="d-flex align-items-center">In Progress &nbsp;
                 <div class="spinner-grow text-success" role="status"></div>
@@ -81,6 +83,7 @@
         <th scope="col"> Match team2 </th>
         <th scope="col"> Team2 Selected by</th>
         <th scope="col"> Match venue </th>
+        <th scope="col"> Points Value </th>
         <th scope="col"> Match Status </th>
     <tr>
     <tr>
@@ -90,6 +93,7 @@
         <td><img src="{{next_match.team2.logo_url}}" class="rounded-circle border border-5" alt="{{next_match.team2.description}}"> {{next_match.team2}}</td>
         <td>{{next_match_sel2}}</td>
         <td>{{next_match.venue}}</td>
+        <td>{{next_match.match_points}}</td>
         <td>{{next_match.result}}</td>
     </tr>
     {% endif %}
@@ -104,6 +108,7 @@
         <th scope="col"> Match team2 </th>
         <th scope="col"> Team2 Selected by</th>
         <th scope="col"> Match venue </th>
+        <th scope="col"> Points Value </th>
         <th scope="col"> Match Status </th>
     <tr>
     <tr>
@@ -113,6 +118,7 @@
         <td><img src="{{last_match.team2.logo_url}}" class="rounded-circle border border-5" alt="{{last_match.team2.description}}"> {{last_match.team2}}</td>
         <td>{{last_match_sel2}}</td>
         <td>{{last_match.venue}}</td>
+        <td>{{last_match.match_points}}</td>
         {% if  last_match.result == 'team1'%}
             <td><img src="{{last_match.team1.logo_url}}" class="rounded-circle border border-5" alt="{{last_match.team1.description}}"> {{last_match.team1.description}} Won</td>
         {% elif  last_match.result == 'team2'%}
