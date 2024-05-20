@@ -8,16 +8,16 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link" href="/dashboard">Dashboard</a>
+          <a class="nav-link" href="/dashboard/" onclick="showLoaderOnClick('/dashboard/')">Dashboard</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="/schedule">BET</a>
+          <a class="nav-link active" aria-current="page" href="/schedule" onclick="showLoaderOnClick('/schedule/')">BET</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/leaderboard">Leaderboard</a>
+          <a class="nav-link" href="/leaderboard" onclick="showLoaderOnClick('/leaderboard/')">Leaderboard</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/results">Results</a>
+          <a class="nav-link" href="/results" onclick="showLoaderOnClick('/results/')">Results</a>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -25,7 +25,7 @@
           </a>
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
               {%for i in all_users%}
-                <li><a class="dropdown-item" href="/schedule/{{i.username}}">{{i.username}}</a></li>
+                <li><a class="dropdown-item" href="/schedule/{{i.username}}" onclick="showLoaderOnClick('/schedule/{{i.username}}')">{{i.username}}</a></li>
               {% endfor%}
           </ul>
         </li>
@@ -37,7 +37,7 @@
         <div class="d-grid gap-2 d-md-block">
         <span class="form-control me-2 text-center">Welcome {{request.user}} </span>
         {%if no_bets is not None%}
-          <button type="button" class="btn btn-primary" onclick="window.location.href='/schedule'">
+          <button type="button" class="btn btn-primary" onclick="showLoaderOnClick('/schedule')">
           No Bets <span class="badge bg-secondary">{{no_bets}}</span>
           </button>
         {% endif %}
