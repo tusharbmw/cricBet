@@ -8,6 +8,7 @@ class Team(models.Model):
     description = models.TextField(blank="True", null="True")
     logo = models.ImageField(blank="True", null="True")
     location = models.CharField(max_length=40, blank="True", null="True")
+    logo_url = models.CharField(max_length=100, blank="True", null="True")
 
     def __str__(self):
         return self.name
@@ -19,7 +20,9 @@ class Match(models.Model):
         ('team1', 'Team1'),
         ('team2', 'Team2'),
         ('IP', 'In Progress'),
-        ('TBD', 'TBD')
+        ('TBD', 'TBD'),
+        ('TOSS', 'Toss'),
+        ('DLD', 'Delayed'),
     )
     team1 = models.ForeignKey(Team, on_delete=models.SET_NULL, null="True", related_name='team1')
     team2 = models.ForeignKey(Team, on_delete=models.SET_NULL, null="True", related_name='team2')
@@ -29,6 +32,7 @@ class Match(models.Model):
     datetime = models.DateTimeField()
     tournament = models.CharField(max_length=50, default="IPL", blank="True", null="True")
     match_id = models.CharField(max_length=50, blank="True", null="True")
+    match_points = models.IntegerField(default=1)
 
     def __str__(self):
         return self.description

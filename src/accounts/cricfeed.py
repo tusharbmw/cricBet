@@ -34,10 +34,15 @@ def get_series_info(tournament_id=None):
         tmp_match["match_id"] = match["id"]
         tmp_match["Team1"] = match["teams"][0]
         tmp_match["Team2"] = match["teams"][1]
-        if re.findall('(\d+)', match["name"]) is not None:
-            tmp_match["Description"] = "Match " + str(re.findall('(\d+)', match["name"])[0])
+        # team order and team info order might be different
+        if tmp_match["Team1"] == match["teamInfo"][0]["name"]:
+            tmp_match["Team1Info"] = match["teamInfo"][0]
+            tmp_match["Team2Info"] = match["teamInfo"][1]
         else:
-            tmp_match["Description"] = match["name"]
+            tmp_match["Team1Info"] = match["teamInfo"][1]
+            tmp_match["Team2Info"] = match["teamInfo"][0]
+
+        tmp_match["Description"] = match["name"].split(",")[-1].strip()
         tmp_match["venue"] = match["venue"].split(",")[-1].strip()
         tmp_match["datetime"] = match["dateTimeGMT"]
         tmp_match["tournament"] = tournament_id

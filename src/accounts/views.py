@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -8,21 +10,88 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from datetime import timezone, datetime, timedelta
 from django.template.defaulttags import register
-import urllib.request as urllib2
-from xml.etree.ElementTree import fromstring
-import re
 from . import cricfeed
-
-hdr = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-    'Accept-Encoding': 'none',
-    'Accept-Language': 'en-US,en;q=0.8',
-    'Connection': 'keep-alive'}
+from rest_framework import permissions
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 # Create your views here.
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def example_view(request, format=None):
+    content = {
+        'user': str(request.user),  # `django.contrib.auth.User` instance.
+        'auth': str(request.auth),  # None
+    }
+    return Response(content)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def results_api_view(request):
+    matches_obj = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by('datetime')
+    context = {}
+    matches = []
+    for current_match in matches_obj:
+        current_match_sel1 = []
+        current_match_sel2 = []
+        result = ''
+        if current_match is not None:
+            for i in current_match.selection_set.all():
+                if i.selection == current_match.team1:
+                    current_match_sel1.append(i.user.username)
+                if i.selection == current_match.team2:
+                    current_match_sel2.append(i.user.username)
+
+            if current_match.result == 'team1':
+                result = current_match.team1.name
+            elif current_match.result == 'team2':
+                result = current_match.team2.name
+            else:
+                result = 'Tied/No Result'
+            matches_dict = {'team1': current_match.team1.name,
+                            'team2': current_match.team2.name,
+                            'id': current_match.id,
+                            'datetime': current_match.datetime,
+                            'result': result,
+                            'venue': current_match.venue,
+                            'description': current_match.description,
+                            'match_sel1': ", ".join(current_match_sel1),
+                            'match_sel2': ", ".join(current_match_sel2)}
+
+            matches.append(matches_dict)
+
+    context["matches"] = matches
+    cnt = get_missing_bet_count(request.user)
+    if cnt >= 0:
+        context['no_bets'] = cnt
+    return Response(json.dumps(context, default=str))
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_api_view(request, format=None):
+    data = request.data
+
+    name = data['name']
+    email = data['email']
+    password1 = data['password']
+    password2 = data['password2']
+
+    if password1 == password2:
+        if User.objects.filter(username=name).exists():
+            return Response({'error': 'User already exists'})
+        else:
+            user = User.objects.create_user(username=name, password=password1, email=email)
+            user.save()
+            return Response({'success': 'User created successfully'})
+    return Response({'error': 'Passwords do not match'})
+
+
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
@@ -157,9 +226,28 @@ def update_match(obj, team):
     obj.save()
 
 
+def add_new_team(team_info):
+    if Team.objects.filter(name=team_info['name']).exists():
+        return
+    t = Team(name=team_info['name'],
+             logo_url=team_info['img'],
+             description=team_info['shortname'],
+             )
+    t.save()
+    return t
+
+
 def add_new_match(match_info):
-    team1 = Team.objects.filter(name=match_info['Team1'])[0]
-    team2 = Team.objects.filter(name=match_info['Team2'])[0]
+    if Team.objects.filter(name=match_info['Team1']).exists():
+        team1 = Team.objects.filter(name=match_info['Team1'])[0]
+    else:
+        team1 = add_new_team(match_info['Team1Info'])
+    # TODO: avoid so many db queries
+    if Team.objects.filter(name=match_info['Team2']).exists():
+        team2 = Team.objects.filter(name=match_info['Team2'])[0]
+    else:
+        team2 = add_new_team(match_info['Team2Info'])
+
     m = Match(match_id=match_info['match_id'],
               team1=team1,
               team2=team2,
@@ -221,7 +309,10 @@ def teams_view(request):
 
 
 def whatsnew_view(request):
-    whatsnew = [{'change': 'April 17,2024 Logic for max skipped bet', 'description': 'if used too many skipped bets, user will get disqualified'},
+    whatsnew = [{'change': 'May 19,2024 Logic for match weight, API, design changes',
+                 'description': 'Match points can now be different, initial support for APIs and UX changes'},
+                {'change': 'April 17,2024 Logic for max skipped bet',
+                 'description': 'if used too many skipped bets, user will get disqualified'},
                 {'change': 'April 14,2024 Matches results', 'description': 'cric API integration for faster/accurate '
                                                                            'result updates'},
                 {'change': 'April 13,2024 Matches auto add', 'description': 'cric API integration to pull match info'},
@@ -242,11 +333,15 @@ def leaderboard(request):
     won = {}
     lost = {}
     skipped = {}
+    matches_won = {}
+    matches_lost = {}
     matches_with_result = Match.objects.filter(Q(result='team1') | Q(result='team2'))
     for u in User.objects.all():
         won[u.username] = 0
         lost[u.username] = 0
         skipped[u.username] = 0
+        matches_won[u.username] = 0
+        matches_lost[u.username] = 0
         for mr in matches_with_result:
             if mr.selection_set.filter(user=u).count() == 0:
                 skipped[u.username] += 1
@@ -261,14 +356,18 @@ def leaderboard(request):
                 mr_sel2.append(s.user.username)
         if mr.result == "team1":
             for u in mr_sel1:
-                won[u] += len(mr_sel2)
+                won[u] += len(mr_sel2) * mr.match_points
+                matches_won[u] += 1
             for u in mr_sel2:
-                lost[u] += len(mr_sel1)
+                lost[u] += len(mr_sel1) * mr.match_points
+                matches_lost[u] += 1
         else:  # team2 won
             for u in mr_sel1:
-                lost[u] += len(mr_sel2)
+                lost[u] += len(mr_sel2) * mr.match_points
+                matches_lost[u] += 1
             for u in mr_sel2:
-                won[u] += len(mr_sel1)
+                won[u] += len(mr_sel1) * mr.match_points
+                matches_won[u] += 1
     total = {}
 
     for u in won.keys():
@@ -280,6 +379,8 @@ def leaderboard(request):
     context['lost'] = lost
     context['won'] = won
     context['skipped'] = skipped
+    context['matches_won'] = matches_won
+    context['matches_lost'] = matches_lost
     cnt = get_missing_bet_count(request.user)
     if cnt >= 0:
         context['no_bets'] = cnt
@@ -292,26 +393,35 @@ def dashboard(request):
     #    selections = user.selection_set.all()
     last_match = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by(
         'datetime').last()
-    current_match = Match.objects.filter(Q(result='IP')).order_by('datetime').first()
+    current_matches_obj = Match.objects.filter(Q(result='IP') | Q(result='DLD') | Q(result='TOSS')).order_by('datetime')
     next_match = Match.objects.filter(Q(result='TBD')).order_by('datetime').first()
     context = {}
-    current_match_sel1 = []
-    current_match_sel2 = []
+    current_matches = []
     next_match_sel1 = []
     next_match_sel2 = []
     last_match_sel1 = []
     last_match_sel2 = []
-
-    if current_match is not None:
-        context['current_match'] = current_match
+    for current_match in current_matches_obj:
+        current_match_sel1 = []
+        current_match_sel2 = []
+        # context['current_match'] = current_match
         for i in current_match.selection_set.all():
             if i.selection == current_match.team1:
                 current_match_sel1.append(i.user.username)
             if i.selection == current_match.team2:
                 current_match_sel2.append(i.user.username)
-        context['current_match_sel1'] = ", ".join(current_match_sel1)
-        context['current_match_sel2'] = ", ".join(current_match_sel2)
+        matches_dict = {'team1': current_match.team1,
+                        'team2': current_match.team2,
+                        'id': current_match.id,
+                        'datetime': current_match.datetime,
+                        'result': current_match.result,
+                        'venue': current_match.venue,
+                        'description': current_match.description,
+                        'match_sel1': ", ".join(current_match_sel1),
+                        'match_sel2': ", ".join(current_match_sel2)}
 
+        current_matches.append(matches_dict)
+    context['current_matches'] = current_matches
     if next_match is not None:
         context['next_match'] = next_match
         for i in next_match.selection_set.all():
