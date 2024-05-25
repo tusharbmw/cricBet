@@ -28,36 +28,38 @@ def get_series_info(tournament_id=None):
     if 'data' not in data:
         return
     for match in data["data"]['matchList']:
-        tmp_match = {}
-        if match["teams"][0] == "Tbc" or match["teams"][1] == "Tbc":
-            continue
-        tmp_match["match_id"] = match["id"]
-        tmp_match["Team1"] = match["teams"][0]
-        tmp_match["Team2"] = match["teams"][1]
-        # team order and team info order might be different
-        if tmp_match["Team1"] == match["teamInfo"][0]["name"]:
-            tmp_match["Team1Info"] = match["teamInfo"][0]
-            tmp_match["Team2Info"] = match["teamInfo"][1]
-        else:
-            tmp_match["Team1Info"] = match["teamInfo"][1]
-            tmp_match["Team2Info"] = match["teamInfo"][0]
+        try:
+            tmp_match = {}
+            if match["teams"][0] == "Tbc" or match["teams"][1] == "Tbc":
+                continue
+            tmp_match["match_id"] = match["id"]
+            tmp_match["Team1"] = match["teams"][0]
+            tmp_match["Team2"] = match["teams"][1]
+            # team order and team info order might be different
+            if tmp_match["Team1"] == match["teamInfo"][0]["name"]:
+                tmp_match["Team1Info"] = match["teamInfo"][0]
+                tmp_match["Team2Info"] = match["teamInfo"][1]
+            else:
+                tmp_match["Team1Info"] = match["teamInfo"][1]
+                tmp_match["Team2Info"] = match["teamInfo"][0]
 
-        tmp_match["Description"] = match["name"].split(",")[-1].strip()
-        tmp_match["venue"] = match["venue"].split(",")[-1].strip()
-        tmp_match["datetime"] = match["dateTimeGMT"]
-        tmp_match["tournament"] = tournament_id
-        if match["status"] == "Match not started":
-            tmp_match["result"] = "TBD"
-        elif "won" in match["status"] and match["matchEnded"] == True:
-            if tmp_match["Team1"] in match["status"]:
-                tmp_match["result"] = "team1"
-            elif tmp_match["Team2"] in match["status"]:
-                tmp_match["result"] = "team2"
-        else:
-            tmp_match["result"] = "NR"
-        print(tmp_match)
-        out_match.append(tmp_match)
-
+            tmp_match["Description"] = match["name"].split(",")[-1].strip()
+            tmp_match["venue"] = match["venue"].split(",")[-1].strip()
+            tmp_match["datetime"] = match["dateTimeGMT"]
+            tmp_match["tournament"] = tournament_id
+            if match["status"] == "Match not started":
+                tmp_match["result"] = "TBD"
+            elif "won" in match["status"] and match["matchEnded"] == True:
+                if tmp_match["Team1"] in match["status"]:
+                    tmp_match["result"] = "team1"
+                elif tmp_match["Team2"] in match["status"]:
+                    tmp_match["result"] = "team2"
+            else:
+                tmp_match["result"] = "NR"
+            print(tmp_match)
+            out_match.append(tmp_match)
+        except:
+            print("Error in parsing match: %s", match)
     return out_match
 
 

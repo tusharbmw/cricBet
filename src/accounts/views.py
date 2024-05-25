@@ -155,6 +155,9 @@ def update(request):
                     continue
 
                 if value in ('team1', 'team2'):
+                    hidden = False  # default value
+                    if match.description == 'Final':
+                        hidden = True
                     if value == 'team1':
                         team = match.team1
                     else:
@@ -162,11 +165,13 @@ def update(request):
                     try:
                         obj = Selection.objects.get(user=user, match=match)
                         obj.selection = team
+                        obj.hidden = hidden
                         obj.save()
                     except Selection.DoesNotExist:
-                        Selection.objects.create(selection=team, user=user, match=match)
+                        Selection.objects.create(selection=team, user=user, match=match, hidden=hidden)
                     except:
                         err += 1
+                        print("kya ho gaya?")
 
                 else:
                     team = None
@@ -237,6 +242,21 @@ def add_new_team(team_info):
     return t
 
 
+def decide_match_weight(description):
+    if description == 'Final':
+        return 5
+    elif description[:10] == 'Semi Final':
+        return 3
+    elif description[:7] == 'Super 8':
+        return 2
+    elif description == 'Qualifier 1' or description == 'Qualifier 2':
+        return 3
+    elif description == 'Eliminator':
+        return 2
+
+    return 1
+
+
 def add_new_match(match_info):
     if Team.objects.filter(name=match_info['Team1']).exists():
         team1 = Team.objects.filter(name=match_info['Team1'])[0]
@@ -255,7 +275,8 @@ def add_new_match(match_info):
               venue=match_info['venue'],
               result="TBD",
               datetime=datetime.strptime(match_info['datetime'], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc),
-              tournament=match_info['tournament']
+              tournament=match_info['tournament'],
+              match_points=decide_match_weight(match_info['Description'])
               )
     m.save()
 
