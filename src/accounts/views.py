@@ -1,5 +1,5 @@
 import json
-
+import os
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
-
+GOOGLE_API_CLIENT_ID = os.environ["GOOGLE_API_CLIENT_ID"]
 
 # Create your views here.
 @api_view(['GET'])
@@ -127,7 +127,7 @@ def login_page(request):
             return redirect('schedule')
         else:
             messages.info(request, 'Username or Password incorrect')
-    context = {}
+    context = {"GOOGLE_API_CLIENT_ID":GOOGLE_API_CLIENT_ID}
     return render(request, 'accounts/login.html', context)
 
 
