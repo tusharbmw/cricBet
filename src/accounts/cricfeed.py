@@ -42,8 +42,9 @@ def get_series_info(tournament_id=None):
             else:
                 tmp_match["Team1Info"] = match["teamInfo"][1]
                 tmp_match["Team2Info"] = match["teamInfo"][0]
-
-            tmp_match["Description"] = match["name"].split(",")[-1].strip()
+            #count comma in match name
+            tmp=(match["name"].count(','))*-1
+            tmp_match["Description"] = match["name"].split(",")[tmp].strip()
             tmp_match["venue"] = match["venue"].split(",")[-1].strip()
             tmp_match["datetime"] = match["dateTimeGMT"]
             tmp_match["tournament"] = tournament_id
