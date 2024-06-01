@@ -18,6 +18,7 @@ urlpatterns = [
     path('results/', views.results_view, name='results'),
     path('home/', views.home, name='home'),
     path('whatsnew/',views.whatsnew_view, name='whatsnew'),
+    path('rules/',views.rules_view, name='rules'),
     path('fill_match/',views.fill_match, name='fill_match'),
     path('api/check/',views.example_view, name ='example_view'),
     path('api/register/',views.register_api_view, name ='register_api_view'),

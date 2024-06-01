@@ -347,6 +347,10 @@ def whatsnew_view(request):
     return render(request, 'accounts/whatsnew.html', {'whatsnew': whatsnew})
 
 
+def rules_view(request):
+    return render(request, 'accounts/rules.html')
+
+
 def leaderboard(request):
     max_skipped_allowed = 30
     context = {}

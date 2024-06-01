@@ -1,0 +1,83 @@
+{% extends 'accounts/main.html' %}
+
+{% block content %}
+<h1> Game Rules </h1>
+<table class="table" border="2">
+    <tr>
+        <th> Rule </th>
+        <th> Description </th>
+    <tr>
+
+
+    <tr>
+    <td><b>How to Bet?</b></td>
+    <td>To place a bet, click the <b>BET</b> button in the top menu. On the <b>BET</b> page, you’ll find a list of upcoming matches scheduled within the next 5 days that are open for betting. Choose your preferred team and click Save. You’ll receive confirmation that your bets have been saved at the top of the page. If you change your mind, follow the same steps to switch sides. <br>Bets are locked in at the official start time of the match. To keep track of matches you haven’t placed bets on, look for the <b>No Bet</b> button in the top right corner. Clicking this button will also take you to the <b>BET</b> page.</td>
+    </tr>
+    <tr>
+        <td><b>No Bet</b></td>
+        <td>Throughout the tournament, players are allowed to skip up to 5 matches. The total number of skipped bets will be displayed on the <b>Leaderboard</b> screen. <u>However, exceeding 5 skipped bets will result in disqualification.</u></td>
+    </tr>
+    <tr>
+        <td><b>Point Value</b></td>
+        <td>Each match is assigned a point value, which determines the number of points you’ll gain or lose based on the outcome of the match. You can find the point value on the <b>BET</b> screen.
+<ul class="list-group"> Match Point Values :
+    <li>Group Stage: 1 point</li>
+    <li>Super 8: 2 points</li>
+    <li>Semi-finals: 3 points</li>
+    <li>Finals: 5 points</li>
+    <li>Qualifies (IPL only): 3 points</li>
+    <li>Eliminator (IPL only): 2 points</li>
+</ul> </td>
+    </tr>
+    <tr>
+        <td><b>How points system works?</b></td>
+        <td> When you choose a side in a match, you’re essentially betting against everyone who picked the opposing side. Here’s how the scoring system works:
+The point value for the match (let’s call it “PV”) is predetermined (e.g., PV = 1 for one match and PV = 2 for another. Refer Point Value section for more details). If your selected team wins the match, you earn points equal to the product of the point value (PV) and the number of opponents who chose the other side. Conversely, if your selected team loses, you lose the same amount of points (negative PV * number of opponents).
+<br>For example, consider a match between Team A and Team B with a point value of 1. Player X and Y choose Team A, while Player Z selects Team B. If Team A wins, both X and Y earn 1 point each, while Z loses 2 points (-2). Conversely, if Team B wins, X and Y lose 1 point each, and Z gains 2 points (+2).
+<br>In another example, let’s say there’s a match between Team C and Team D with a point value of 2. Player X chooses Team C, and Players Y and Z choose Team D. If Team C wins, X earns 4 points (2 * 2 opponents), while Y and Z each lose 2 points (-2). On the other hand, if Team D wins, Y and Z each gain 2 points (+2), and X loses 4 points (-4).
+<br>In the event of a tie or no results, no points are gained or lost. If no bet is selected, it means you’re skipping the bet, and the outcome of the match will have no effect on your points. Additionally, if all players pick the same side (i.e., no one is betting against each other), the match outcome will also have no impact on points.
+Participants can view their aggregated points on the leaderboard screen.</td>
+    </tr>
+
+    <tr>
+        <td><b>Winner</b></td>
+        <td> Player with the highest points at the end of tournament wins.</td>
+    </tr>
+
+    <tr>
+        <td><b>Tie breaker</b></td>
+        <td>In the event that two or more players are tied with the same total points, a tiebreaker will be applied. The first tiebreaker considers the number of skipped bets, with the player having fewer skipped bets being declared the winner. If the tie persists, the next criterion is the number of matches won. Should the tie still remain, the players who tied will be declared joint winners. 🏆
+</td>
+    </tr>
+
+<tr>
+    <td><b>Hidden bet</b></td>
+    <td>Playoff games by default will be hidden so no one can see other’s bet for those games.</td>
+</tr>
+
+<tr>
+    <td><b>Penalty</b></td>
+    <td>During playoff games, players are required to choose a side. Otherwise the losing side will be picked automatically for the player as a penalty.</td>
+</tr>
+<tr>
+    <td><b>Rule changes</b></td>
+    <td>Any rule changes during the tournament will require a majority of players to vote on it.</td>
+</tr>
+<tr>
+    <td><b>Power ups</b></td>
+    <td><ul class="list-group">Coming in 2025
+	<li>Hidden bet:</li>
+	<li>Fake:</li>
+	<li>Opposite:</li>
+    <li>No Negative: </li>
+    </ul></td>
+</tr>
+<tr>
+    <td></td>
+    <td></td>
+</tr>
+
+
+
+</table>
+{% endblock %}
