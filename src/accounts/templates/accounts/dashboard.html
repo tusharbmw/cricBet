@@ -43,39 +43,8 @@
  {% endif %}
 </table>
 <table class="table table-hover" border="2">
-    {% if next_match is not None %}
-    <script>
-        // Set the date we're counting down to
-        var countDownDate = new Date({{ next_match_timer }}).getTime();
-
-        // Update the count down every 1 second
-        var x = setInterval(function() {
-
-            // Get today's date and time
-            var now = new Date().getTime();
-
-            // Find the distance between now and the count down date
-            var distance = countDownDate - now;
-
-            // Time calculations for days, hours, minutes and seconds
-            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            // Output the result in an element with id="demo"
-            document.getElementById("timer").innerHTML = days + "d " + hours + "h "
-            + minutes + "m " + seconds + "s ";
-
-            // If the count down is over, write some text
-            if (distance < 0) {
-                clearInterval(x);
-                document.getElementById("timer").innerHTML = "Live!";
-            }
-        }, 1000);
-</script>
-
-    <tr><th colspan="10" style="text-align:center;" > Upcoming Match <p id="timer" style="color:red;"></p></th></tr>
+    {% if upcoming_matches %}
+    <tr><th colspan="10" style="text-align:center;" > Upcoming Matches</th></tr>
     <tr>
         <th scope="col"> Match </th>
         <th scope="col"> Team1 Selected by </th>
@@ -84,19 +53,56 @@
         <th scope="col"> Team2 Selected by</th>
         <th scope="col"> Match venue </th>
         <th scope="col"> Points Value </th>
-        <th scope="col"> Match Status </th>
+        <th scope="col"> Starts in: </th>
     <tr>
+
+    {% for next_match in upcoming_matches %}
+    <script>
+        // Set the date we're counting down to
+        var countDownDate{{ forloop.counter }} = new Date({{ next_match.next_match_timer }}).getTime();
+
+        // Update the count down every 1 second
+        var x{{ forloop.counter }} = setInterval(function() {
+
+            // Get today's date and time
+            var now = new Date().getTime();
+
+            // Find the distance between now and the count down date
+            var distance{{ forloop.counter }} = countDownDate{{ forloop.counter }} - now;
+
+            // Time calculations for days, hours, minutes and seconds
+            var days{{ forloop.counter }} = Math.floor(distance{{ forloop.counter }} / (1000 * 60 * 60 * 24));
+            var hours{{ forloop.counter }} = Math.floor((distance{{ forloop.counter }} % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes{{ forloop.counter }} = Math.floor((distance{{ forloop.counter }} % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds{{ forloop.counter }} = Math.floor((distance{{ forloop.counter }} % (1000 * 60)) / 1000);
+
+            // Output the result in an element with id="demo"
+            document.getElementById("timer{{ forloop.counter }}").innerHTML = days{{ forloop.counter }} + "d " + hours{{ forloop.counter }} + "h "
+            + minutes{{ forloop.counter }} + "m " + seconds{{ forloop.counter }} + "s ";
+
+            // If the count down is over, write some text
+            if (distance{{ forloop.counter }} < 0) {
+                clearInterval(x{{ forloop.counter }});
+                document.getElementById("timer{{ forloop.counter }}").innerHTML = "Live!";
+            }
+        }, 1000);
+</script>
+
+
     <tr>
         <td>{{next_match.description}}</td>
-        <td>{{next_match_sel1}}</td>
+        <td>{{next_match.match_sel1}}</td>
         <td><img src="{{next_match.team1.logo_url}}" class="rounded-circle border border-5" alt="{{next_match.team1.description}}"> {{next_match.team1}}</td>
         <td><img src="{{next_match.team2.logo_url}}" class="rounded-circle border border-5" alt="{{next_match.team2.description}}"> {{next_match.team2}}</td>
-        <td>{{next_match_sel2}}</td>
+        <td>{{next_match.match_sel2}}</td>
         <td>{{next_match.venue}}</td>
         <td>{{next_match.match_points}}</td>
-        <td>{{next_match.result}}</td>
+        <td><p id="timer{{ forloop.counter }}" style="color:red;"></p></td>
     </tr>
-    {% endif %}
+
+    {% endfor %}
+{% endif %}
+
 </table>
 <table class="table table-hover" border="2">
     {% if last_match is not None %}

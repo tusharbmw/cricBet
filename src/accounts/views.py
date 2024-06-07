@@ -419,11 +419,11 @@ def dashboard(request):
     last_match = Match.objects.filter(Q(result='team1') | Q(result='team2') | Q(result='NR')).order_by(
         'datetime').last()
     current_matches_obj = Match.objects.filter(Q(result='IP') | Q(result='DLD') | Q(result='TOSS')).order_by('datetime')
-    next_match = Match.objects.filter(Q(result='TBD')).order_by('datetime').first()
+    upcoming_matches_obj = Match.objects.filter(Q(result='TBD')).order_by('datetime').all()[:3]
     context = {}
     current_matches = []
-    next_match_sel1 = []
-    next_match_sel2 = []
+    upcoming_matches = []
+
     last_match_sel1 = []
     last_match_sel2 = []
     for current_match in current_matches_obj:
@@ -448,17 +448,28 @@ def dashboard(request):
 
         current_matches.append(matches_dict)
     context['current_matches'] = current_matches
-    if next_match is not None:
-        context['next_match'] = next_match
+
+    for next_match in upcoming_matches_obj:
+        next_match_sel1 = []
+        next_match_sel2 = []
         for i in next_match.selection_set.all():
             if i.selection == next_match.team1 and i.hidden is False:
                 next_match_sel1.append(i.user.username)
             if i.selection == next_match.team2 and i.hidden is False:
                 next_match_sel2.append(i.user.username)
-        context['next_match_sel1'] = ", ".join(next_match_sel1)
-        context['next_match_sel2'] = ", ".join(next_match_sel2)
-        context['next_match_timer'] = int(next_match.datetime.timestamp() * 1000)
-
+        matches_dict = {'team1': next_match.team1,
+                        'team2': next_match.team2,
+                        'id': next_match.id,
+                        'datetime': next_match.datetime,
+                        'result': next_match.result,
+                        'venue': next_match.venue,
+                        'description': next_match.description,
+                        'match_points': next_match.match_points,
+                        'match_sel1': ", ".join(next_match_sel1),
+                        'match_sel2': ", ".join(next_match_sel2),
+                        'next_match_timer': int(next_match.datetime.timestamp() * 1000)}
+        upcoming_matches.append(matches_dict)
+    context['upcoming_matches'] = upcoming_matches
     if last_match is not None:
         context['last_match'] = last_match
         for i in last_match.selection_set.all():
