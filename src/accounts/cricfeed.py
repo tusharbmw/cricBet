@@ -36,12 +36,23 @@ def get_series_info(tournament_id=None):
             tmp_match["Team1"] = match["teams"][0]
             tmp_match["Team2"] = match["teams"][1]
             # team order and team info order might be different
-            if tmp_match["Team1"] == match["teamInfo"][0]["name"]:
-                tmp_match["Team1Info"] = match["teamInfo"][0]
-                tmp_match["Team2Info"] = match["teamInfo"][1]
+            # check if teaminfo value exists
+            if 'teamInfo' in match:
+                if tmp_match["Team1"] == match["teamInfo"][0]["name"]:
+                    tmp_match["Team1Info"] = match["teamInfo"][0]
+                    tmp_match["Team2Info"] = match["teamInfo"][1]
+                else:
+                    tmp_match["Team1Info"] = match["teamInfo"][1]
+                    tmp_match["Team2Info"] = match["teamInfo"][0]
             else:
-                tmp_match["Team1Info"] = match["teamInfo"][1]
-                tmp_match["Team2Info"] = match["teamInfo"][0]
+                tmp_match["Team1Info"] = {}
+                tmp_match["Team2Info"] = {}
+                tmp_match["Team1Info"]["name"] = match["teams"][0]
+                tmp_match["Team2Info"]["name"] = match["teams"][1]
+                tmp_match["Team1Info"]["shortname"] = ""
+                tmp_match["Team2Info"]["shortname"] = ""
+                tmp_match["Team1Info"]["img"] = ""
+                tmp_match["Team2Info"]["img"] = ""
             #count comma in match name
             tmp=(match["name"].count(','))*-1
             tmp_match["Description"] = match["name"].split(",")[tmp].strip()
@@ -59,8 +70,9 @@ def get_series_info(tournament_id=None):
                 tmp_match["result"] = "NR"
             print(tmp_match)
             out_match.append(tmp_match)
-        except:
+        except Exception as error:
             print("Error in parsing match: %s", match)
+            print(error)
     return out_match
 
 
