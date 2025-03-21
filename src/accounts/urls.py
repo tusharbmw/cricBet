@@ -23,4 +23,5 @@ urlpatterns = [
     path('api/check/',views.example_view, name ='example_view'),
     path('api/register/',views.register_api_view, name ='register_api_view'),
     path('api/results/', views.results_api_view, name='results_api_view'),
+    path('update_powerups/', views.update_powerups, name='update_powerups'),
 ]

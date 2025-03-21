@@ -36,6 +36,28 @@
           <a class="nav-link" href="/admin">Admin</a>
         </li>
       </ul>
+        <form class="d-flex">
+            <div class="d-grid gap-2 d-md-block">
+            <span class="form-control me-2 text-center">Power-Ups </span>
+
+              {%if hidden_count is not None%}
+                <button type="button" data-button-name="hidden" id="draggableButton" draggable="true" class="btn btn-warning" onclick="window.location.href='/schedule'"  {{ hidden_disabled }}>
+              Hidden <span class="badge bg-secondary">{{ hidden_count }}</span>
+                </button>
+              {% endif %}
+              {%if no_negative_count is not None%}
+                <button type="button" data-button-name="no_negative" id="draggableButton" draggable="true" class="btn btn-warning" onclick="window.location.href='/schedule'" {{ no_neg_disabled }}>
+              No Negative <span class="badge bg-secondary">{{ no_negative_count }}</span>
+                </button>
+              {% endif %}
+              {%if fake_count is not None%}
+                <button type="button" data-button-name="fake" id="draggableButton" draggable="true" class="btn btn-warning" onclick="window.location.href='/schedule'" {{ fake_disabled }}>
+              Fake <span class="badge bg-secondary">{{ fake_count }}</span>
+                </button>
+              {% endif %}
+
+            </div>
+        </form>
       <form class="d-flex">
         <div class="d-grid gap-2 d-md-block">
         <span class="form-control me-2 text-center">Welcome {{request.user}} </span>

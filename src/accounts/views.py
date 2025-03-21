@@ -16,6 +16,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
+
+#from ..teams.models import Selection
+
 GOOGLE_API_CLIENT_ID = os.environ["GOOGLE_API_CLIENT_ID"]
 
 # Create your views here.
@@ -69,6 +72,16 @@ def results_api_view(request):
     cnt = get_missing_bet_count(request.user)
     if cnt >= 0:
         context['no_bets'] = cnt
+    powerups=get_powerup_stats(request.user)
+    context['fake_count'] = powerups["fake_count"]
+    context['no_negative_count'] = powerups["no_negative_count"]
+    context['hidden_count'] = powerups["hidden_count"]
+    if powerups["fake_count"]==0:
+        context['fake_disabled'] = "disabled"
+    if powerups["no_negative_count"]==0:
+        context['no_neg_disabled'] = "disabled"
+    if powerups["hidden_count"]==0:
+        context['hidden_disabled'] = "disabled"
     return Response(json.dumps(context, default=str))
 
 
@@ -112,6 +125,37 @@ def get_missing_bet_count(user):
             cnt += 1
     return cnt
 
+def get_powerup_stats(user):
+    try:
+        user = User.objects.get(username=user)
+    except:
+        return -1
+    if user is None:
+        return -1
+    #starting values
+    fake_count=5
+    no_negative_count=5
+    hidden_count=5
+    selections=Selection.objects.filter(user=user)
+    for selection in selections:
+        if selection.no_negative:
+            no_negative_count -= 1
+        if selection.fake:
+            fake_count -= 1
+        if selection.hidden:
+            hidden_count -= 1
+
+    #setting them 0 in case of negative value
+    if no_negative_count < 0:
+        no_negative_count=0
+    if fake_count < 0:
+        fake_count=0
+    if hidden_count < 0:
+        hidden_count=0
+
+    return {"no_negative_count":no_negative_count, "fake_count": fake_count,"hidden_count": hidden_count}
+
+
 
 def home(request):
     return HttpResponse("Hello , welcome to TushCricBet")
@@ -139,6 +183,55 @@ def logout_page(request):
 
 
 @login_required(login_url='/login')
+def update_powerups(request):
+    err=0
+    print("Method was called")
+    if request.method == 'POST':
+        user = User.objects.get(username=request.user)
+
+        for key, value in request.POST.items():
+            print(key, value)
+        body_unicode = request.body.decode('utf-8')
+        body_data = json.loads(body_unicode)
+
+        powerup_type = body_data['content'].split(' ')[3]
+        match_id = body_data['content'].split(' ')[9]
+
+        match=Match.objects.get(id=match_id)
+
+        try:
+            obj = Selection.objects.get(user=user, match=match)
+            if powerup_type == 'fake':
+                if obj.fake:
+                    messages.info(request, 'Fake Power up is already applied')
+                    return HttpResponse()
+                obj.fake = True
+            elif powerup_type == 'hidden':
+                if obj.hidden:
+                    messages.info(request, 'Hidden Power up is already applied')
+                    return HttpResponse()
+                obj.hidden = True
+            elif powerup_type == 'no_negative':
+                if obj.no_negative:
+                    messages.info(request, 'No Negative Power up is already applied')
+                    return HttpResponse()
+                obj.no_negative = True
+            obj.save()
+        except Selection.DoesNotExist:
+            messages.error(request, "Please make/save a selection before applying powerups. You can't apply powerup on No Bet." )
+            return HttpResponse()
+        except:
+            err += 1
+            print("kya ho gaya?")
+
+    if err == 0:
+        messages.success(request, "Powerup applied successfully. Good Luck! ")
+    else:
+        messages.error(request, "Issue in applying powerup. Please try again later")
+    return HttpResponse()
+
+
+@login_required(login_url='/login')
 def update(request):
     if request.method == "POST":
         user = User.objects.get(username=request.user)
@@ -156,7 +249,9 @@ def update(request):
 
                 if value in ('team1', 'team2'):
                     hidden = False  # default value
-                    if match.description == 'Final':
+                    #auto hide list
+                    auto_hide_desc = ['Final', 'Semi Final', 'Qualifier 1', 'Qualifier 2','Eliminator','Super 8']
+                    if match.description in auto_hide_desc:
                         hidden = True
                     if value == 'team1':
                         team = match.team1
@@ -178,6 +273,9 @@ def update(request):
                     # delete row
                     try:
                         obj = Selection.objects.get(user=user, match=match)
+                        if obj.hidden or obj.fake or obj.no_negative:
+                            messages.info(request, "Can't set No Bet on matches with Power up applied")
+                            return redirect('schedule')
                         obj.delete()
                     except Selection.DoesNotExist:
                         pass  # Nothing to delete
@@ -185,6 +283,7 @@ def update(request):
                         err += 1
     if err == 0:
         messages.success(request, "Picks saved successfully. Good Luck! ")
+        print("message was sent")
     else:
         messages.error(request, "Issue in saving picks. Please try again later")
     return redirect('schedule')
@@ -330,7 +429,9 @@ def teams_view(request):
 
 
 def whatsnew_view(request):
-    whatsnew = [{'change': 'May 19,2024 Logic for match weight, API, design changes',
+    whatsnew = [{'change': 'March 16,2025 update stack',
+                 'description': 'Updated tech stack and security patches'},
+                {'change': 'May 19,2024 Logic for match weight, API, design changes',
                  'description': 'Match points can now be different, initial support for APIs and UX changes'},
                 {'change': 'April 17,2024 Logic for max skipped bet',
                  'description': 'if used too many skipped bets, user will get disqualified'},
@@ -352,7 +453,7 @@ def rules_view(request):
 
 
 def leaderboard(request):
-    max_skipped_allowed = 30
+    max_skipped_allowed = 5
     context = {}
     # initialize win and loss
     won = {}
@@ -374,21 +475,28 @@ def leaderboard(request):
     for mr in matches_with_result:
         mr_sel1 = []
         mr_sel2 = []
+        mr_no_negative = []
         for s in mr.selection_set.all():
             if s.selection == mr.team1:
                 mr_sel1.append(s.user.username)
             if s.selection == mr.team2:
                 mr_sel2.append(s.user.username)
+            if s.no_negative:
+                mr_no_negative.append(s.user.username)
         if mr.result == "team1":
             for u in mr_sel1:
                 won[u] += len(mr_sel2) * mr.match_points
                 matches_won[u] += 1
             for u in mr_sel2:
-                lost[u] += len(mr_sel1) * mr.match_points
+                # logic for no negative, apply lost points only if no_negative was not enabled
+                if u not in mr_no_negative:
+                    lost[u] += len(mr_sel1) * mr.match_points
                 matches_lost[u] += 1
         else:  # team2 won
             for u in mr_sel1:
-                lost[u] += len(mr_sel2) * mr.match_points
+                # logic for no negative, apply lost points only if no_negative was not enabled
+                if u not in mr_no_negative:
+                    lost[u] += len(mr_sel2) * mr.match_points
                 matches_lost[u] += 1
             for u in mr_sel2:
                 won[u] += len(mr_sel1) * mr.match_points
@@ -409,6 +517,16 @@ def leaderboard(request):
     cnt = get_missing_bet_count(request.user)
     if cnt >= 0:
         context['no_bets'] = cnt
+    powerups=get_powerup_stats(request.user)
+    context['fake_count'] = powerups["fake_count"]
+    context['no_negative_count'] = powerups["no_negative_count"]
+    context['hidden_count'] = powerups["hidden_count"]
+    if powerups["fake_count"]==0:
+        context['fake_disabled'] = "disabled"
+    if powerups["no_negative_count"]==0:
+        context['no_neg_disabled'] = "disabled"
+    if powerups["hidden_count"]==0:
+        context['hidden_disabled'] = "disabled"
     return render(request, 'accounts/leaderboard.html', context)
 
 
@@ -454,9 +572,15 @@ def dashboard(request):
         next_match_sel2 = []
         for i in next_match.selection_set.all():
             if i.selection == next_match.team1 and i.hidden is False:
-                next_match_sel1.append(i.user.username)
+                if i.fake is False:
+                    next_match_sel1.append(i.user.username)
+                else:
+                    next_match_sel2.append(i.user.username)
             if i.selection == next_match.team2 and i.hidden is False:
-                next_match_sel2.append(i.user.username)
+                if i.fake is False:
+                    next_match_sel2.append(i.user.username)
+                else:
+                    next_match_sel1.append(i.user.username)
         matches_dict = {'team1': next_match.team1,
                         'team2': next_match.team2,
                         'id': next_match.id,
@@ -483,7 +607,16 @@ def dashboard(request):
     cnt = get_missing_bet_count(request.user)
     if cnt >= 0:
         context['no_bets'] = cnt
-
+    powerups=get_powerup_stats(request.user)
+    context['fake_count'] = powerups["fake_count"]
+    context['no_negative_count'] = powerups["no_negative_count"]
+    context['hidden_count'] = powerups["hidden_count"]
+    if powerups["fake_count"]==0:
+        context['fake_disabled'] = "disabled"
+    if powerups["no_negative_count"]==0:
+        context['no_neg_disabled'] = "disabled"
+    if powerups["hidden_count"]==0:
+        context['hidden_disabled'] = "disabled"
     return render(request, 'accounts/dashboard.html', context)
 
 
@@ -513,7 +646,8 @@ def schedule_view(request, pk=''):
                     'result': m.result,
                     'venue': m.venue,
                     'match_points': m.match_points,
-                    'description': m.description}
+                    'description': m.description,
+                    'powerups': ''}
         if m.selection_set.filter(user=user).count() == 0:
             tmp_dict['none_checked'] = 'checked'
         else:
@@ -523,14 +657,39 @@ def schedule_view(request, pk=''):
                 tmp_dict['team2_checked'] = 'checked'
             # hidden bet logic
             if user != request.user and m.selection_set.filter(user=user).first().hidden:
-                tmp_dict['none_checked'] = 'checked'
                 tmp_dict['team1_checked'] = ''
                 tmp_dict['team2_checked'] = ''
+            # fake bet logic
+            if user != request.user and m.selection_set.filter(user=user).first().fake:
+                if tmp_dict['team1_checked'] == 'checked':
+                    tmp_dict['team1_checked'] = ''
+                    tmp_dict['team2_checked'] = 'checked'
+                elif tmp_dict['team2_checked'] == 'checked':
+                    tmp_dict['team1_checked'] = 'checked'
+                    tmp_dict['team2_checked'] = ''
+            #power up discplay
+            if user == request.user and m.selection_set.filter(user=user).first().hidden:
+                tmp_dict['powerups'] += ' hidden '
+            if user == request.user and m.selection_set.filter(user=user).first().fake:
+                tmp_dict['powerups'] += ' fake '
+            if user == request.user and m.selection_set.filter(user=user).first().no_negative:
+                tmp_dict['powerups'] += ' no_negative '
+
 
         matches_list.append(tmp_dict)
     cnt = get_missing_bet_count(request.user)
     if cnt >= 0:
         context['no_bets'] = cnt
+    powerups=get_powerup_stats(request.user)
+    context['fake_count'] = powerups["fake_count"]
+    context['no_negative_count'] = powerups["no_negative_count"]
+    context['hidden_count'] = powerups["hidden_count"]
+    if powerups["fake_count"]==0:
+        context['fake_disabled'] = "disabled"
+    if powerups["no_negative_count"]==0:
+        context['no_neg_disabled'] = "disabled"
+    if powerups["hidden_count"]==0:
+        context['hidden_disabled'] = "disabled"
     context['matches_list'] = matches_list
     context['uname'] = user.username
     context['disabled'] = disabled
@@ -576,4 +735,14 @@ def results_view(request):
     cnt = get_missing_bet_count(request.user)
     if cnt >= 0:
         context['no_bets'] = cnt
+    powerups=get_powerup_stats(request.user)
+    context['fake_count'] = powerups["fake_count"]
+    context['no_negative_count'] = powerups["no_negative_count"]
+    context['hidden_count'] = powerups["hidden_count"]
+    if powerups["fake_count"]==0:
+        context['fake_disabled'] = "disabled"
+    if powerups["no_negative_count"]==0:
+        context['no_neg_disabled'] = "disabled"
+    if powerups["hidden_count"]==0:
+        context['hidden_disabled'] = "disabled"
     return render(request, 'accounts/results.html', context)

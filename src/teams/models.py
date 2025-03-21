@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class Team(models.Model):
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=50)
     description = models.TextField(blank="True", null="True")
     logo = models.ImageField(blank="True", null="True")
     location = models.CharField(max_length=40, blank="True", null="True")
@@ -43,5 +43,7 @@ class Selection(models.Model):
     match = models.ForeignKey(Match, on_delete=models.SET_NULL, null="True")
     selection = models.ForeignKey(Team, on_delete=models.SET_NULL, null="True")
     hidden = models.BooleanField(default=False)
+    no_negative = models.BooleanField(default=False)
+    fake = models.BooleanField(default=False)
 
 
