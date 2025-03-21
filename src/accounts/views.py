@@ -429,7 +429,9 @@ def teams_view(request):
 
 
 def whatsnew_view(request):
-    whatsnew = [{'change': 'March 16,2025 update stack',
+    whatsnew = [{'change': 'March 20,2025 update stack',
+                 'description': 'Introducing Powerups for 2025 season'},
+                {'change': 'March 16,2025 update stack',
                  'description': 'Updated tech stack and security patches'},
                 {'change': 'May 19,2024 Logic for match weight, API, design changes',
                  'description': 'Match points can now be different, initial support for APIs and UX changes'},
