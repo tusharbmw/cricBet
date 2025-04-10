@@ -22,6 +22,7 @@
     <tr>
         <th scope="col"> Date Time (GMT) </th>
         <th scope="col"> Description </th>
+        <th scope="col"> Venue </th>
         <th scope="col"> Match team1 </th>
         <th scope="col"> No Bet? </th>
         <th scope="col"> Match team2 </th>
@@ -34,6 +35,7 @@
     <tr class="droppable-row" data-row-name="{{ m.id }}">
     <td>{{m.datetime}}</td>
     <td>{{m.description}}</td>
+    <td>{{m.venue}}</td>
     <td><input type="radio" class="btn-check" name="options_{{m.id}}" value="team1" id="team_1_{{m.id}}" autocomplete="off" onchange="document.getElementById('mySaveBtn').disabled = false;" {{m.team1_checked}} {{disabled}} >
 <label class="btn btn-outline-success" for="team_1_{{m.id}}">{{m.team1}}</label></td>
     <td><input type="radio" class="btn-check" name="options_{{m.id}}" value="None" id="team_none_{{m.id}}" autocomplete="off" onchange="document.getElementById('mySaveBtn').disabled = false;" {{m.none_checked}} {{disabled}}>
@@ -59,7 +61,8 @@
         </div>
       <div class="modal-body">
           <h5>You are applying powerups and this action is irreversible </h5>
-          <p id="powerup-modal-text">This will apply X power on Y march. Are you sure?</p>
+          <p id="powerup-modal-text">This will apply X power on Y match. Are you sure?</p>
+          <p id="powerup-modal-matchid" hidden></p>
           <hr>
           <p>Refer to <a href="/rules" title="Rules page">Rules</a> page for more details.</p>
       </div>

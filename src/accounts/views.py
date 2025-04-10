@@ -3,7 +3,7 @@ import os
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from teams.models import *
 from django.db.models import Q
 from django.contrib import messages
@@ -188,15 +188,35 @@ def update_powerups(request):
     print("Method was called")
     if request.method == 'POST':
         user = User.objects.get(username=request.user)
-
-        for key, value in request.POST.items():
-            print(key, value)
-        body_unicode = request.body.decode('utf-8')
-        body_data = json.loads(body_unicode)
-
-        powerup_type = body_data['content'].split(' ')[3]
-        match_id = body_data['content'].split(' ')[9]
-
+        
+        try:
+            body_unicode = request.body.decode('utf-8')
+            body_data = json.loads(body_unicode)
+            
+            if 'content' not in body_data:
+                return JsonResponse({'error': 'content is required'}, status=400)
+            if 'matchid' not in body_data:
+                return JsonResponse({'error': 'match_id is required'}, status=400)
+                
+            content = body_data['content']
+            content_parts = content.split(' ')
+            
+            # Get powerup_type from position 3 
+            if len(content_parts) <= 3:
+                return JsonResponse({'error': 'Invalid content format'}, status=400)
+                
+            powerup_type = content_parts[3]
+            match_id = body_data['matchid']
+            if not str(match_id).isdigit():
+                return JsonResponse({'error': 'Invalid match_id format'}, status=400)
+            
+            # Validate powerup_type
+            if powerup_type not in ['fake', 'hidden', 'no_negative']:
+                return JsonResponse({'error': 'Invalid powerup_type'}, status=400)
+                
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+        
         match=Match.objects.get(id=match_id)
 
         try:

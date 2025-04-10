@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
       keyboard: true
     })
     const modaltext = document.getElementById('powerup-modal-text')
+    const modalmatchid = document.getElementById('powerup-modal-matchid')
     const powerupsavebtn = document.getElementById('powerup_save')
     // let currentRow = null;
 
@@ -36,9 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
     powerupsavebtn.addEventListener('click', (event) => {
          // event.dataTransfer.setData('text/plain', button.getAttribute('data-button-name'));
         const content  = document.getElementById('powerup-modal-text').textContent;
+        const matchid = document.getElementById('powerup-modal-matchid').textContent;
         //const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         var csrf_token = getCookie('csrftoken');
-        console.log("Tushar event triggered"+content)
+
       powerupmodal.hide();
       fetch('/update_powerups/', {
         method: 'POST',
@@ -46,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
           'Content-Type': 'application/json',
             'X-CSRFToken': csrf_token ,
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ matchid ,content }),
       })
       .then(response => response.text())
       .then(data => {
@@ -74,7 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
         row.classList.remove('highlight');
         const buttonName = e.dataTransfer.getData('text/plain');
         const rowName = row.getAttribute('data-row-name');
-        modaltext.textContent = `This will apply ${buttonName} Power Up on Match number ${rowName} ! Are you sure?`;
+        const matchDescription = row.querySelector('td:nth-child(2)').textContent;
+        const team1Name = row.querySelector('td:nth-child(4) label').textContent;
+        const team2Name = row.querySelector('td:nth-child(6) label').textContent;
+        modaltext.textContent = `This will apply ${buttonName} Power Up on ${matchDescription} (${team1Name} vs ${team2Name})! Are you sure?`;
+        modalmatchid.textContent = `${rowName}`;
         console.log("Tushar modal is now displayed");
         powerupmodal.show();
 
