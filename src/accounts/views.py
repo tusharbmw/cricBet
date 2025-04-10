@@ -729,10 +729,20 @@ def results_view(request):
         result = ''
         if current_match is not None:
             for i in current_match.selection_set.all():
+                user_info = i.user.username
+                power_ups = []
+                if i.hidden:
+                    power_ups.append("Hidden")
+                if i.no_negative:
+                    power_ups.append("No Negative")
+                if i.fake:
+                    power_ups.append("Fake")
+                if power_ups:
+                    user_info += f" ({', '.join(power_ups)})"
                 if i.selection == current_match.team1:
-                    current_match_sel1.append(i.user.username)
+                    current_match_sel1.append(user_info)
                 if i.selection == current_match.team2:
-                    current_match_sel2.append(i.user.username)
+                    current_match_sel2.append(user_info)
 
             if current_match.result == 'team1':
                 result = current_match.team1
