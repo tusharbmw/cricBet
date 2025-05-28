@@ -136,6 +136,11 @@ def get_powerup_stats(user):
     fake_count=5
     no_negative_count=5
     hidden_count=5
+    # During playoffs -- TODO disable once playoffs are over
+    fake_count=0
+    no_negative_count=0
+    hidden_count=0    
+
     selections=Selection.objects.filter(user=user)
     for selection in selections:
         if selection.no_negative:
